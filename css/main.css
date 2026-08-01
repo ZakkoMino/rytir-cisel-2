@@ -1,0 +1,474 @@
+/* Rytíř Čísel – základ, kulisy, tlačítka, mapa, komiks */
+
+:root {
+  --noc:      #1b1338;
+  --noc2:     #241a42;
+  --noc3:     #2e2350;
+  --pergamen: #f7ecd4;
+  --pergamen2:#e6d3ac;
+  --zlata:    #f2b544;
+  --zlata2:   #ffd166;
+  --cervena:  #e0575b;
+  --zelena:   #4ec3a5;
+  --modra:    #6ea8ff;
+  --fialova:  #a97bd6;
+
+  --r:   18px;
+  --r-s: 12px;
+  --tap: 4.4rem;                     /* minimální dotyková plocha */
+  --stin-s: 0 4px 0 rgba(0,0,0,.28);
+  --stin-m: 0 10px 26px rgba(0,0,0,.34);
+  --pismo: "Baloo 2", "Comic Sans MS", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0; padding: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--noc);
+  font-family: var(--pismo);
+  color: var(--pergamen);
+  /* Velikost písma se škáluje s výškou tabletu, ale nepřeteče. */
+  font-size: clamp(15px, min(2.05vh, 1.55vw), 23px);
+  -webkit-text-size-adjust: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+#app { position: fixed; inset: 0; }
+
+#fx {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 90;
+  overflow: hidden;
+}
+
+/* ---------- scéna ---------- */
+
+.scena {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  transition: opacity .26s ease, transform .26s ease;
+}
+.scena.prichazi { opacity: 0; transform: scale(.985); }
+.scena.odchazi  { opacity: 0; transform: scale(1.015); pointer-events: none; }
+
+.kulisa {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+}
+.kulisa .vrstva.v3 { animation: dychani 14s ease-in-out infinite; transform-origin: bottom; }
+.kulisa .vrstva.v2 { animation: dychani 18s ease-in-out infinite reverse; transform-origin: bottom; }
+.kulisa .hvezdicka { animation: mrkani 3.4s ease-in-out infinite; }
+.kulisa-hrad       { animation: dychani 9s ease-in-out infinite; transform-origin: bottom; }
+.kulisa-drak       { animation: preletDraka 22s linear infinite; }
+
+@keyframes dychani  { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.012); } }
+@keyframes mrkani   { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
+@keyframes preletDraka {
+  0%   { transform: translate(120px, 10px) scale(.8); opacity: 0; }
+  10%  { opacity: .75; }
+  90%  { opacity: .75; }
+  100% { transform: translate(-320px, -22px) scale(1.1); opacity: 0; }
+}
+
+.obsah {
+  position: relative; z-index: 1;
+  flex: 1;
+  display: flex; flex-direction: column;
+  min-height: 0;
+  padding: max(.7rem, env(safe-area-inset-top)) 1rem .8rem;
+}
+
+/* ---------- tlačítka ---------- */
+
+.tl {
+  font: inherit;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  color: #2a1c10;
+  background: linear-gradient(#ffd97a, var(--zlata));
+  border-radius: var(--r);
+  padding: .75em 1.5em;
+  min-height: var(--tap);
+  box-shadow: 0 5px 0 #b7822b, var(--stin-m);
+  transition: transform .09s ease, box-shadow .09s ease, filter .15s ease;
+  letter-spacing: .01em;
+  touch-action: manipulation;
+}
+.tl:active { transform: translateY(4px); box-shadow: 0 1px 0 #b7822b, var(--stin-m); }
+.tl:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.tl[disabled] { filter: grayscale(.7) brightness(.8); pointer-events: none; }
+
+.tl.velke { font-size: 1.35em; padding: .8em 2em; }
+.tl.duch {
+  background: rgba(255,255,255,.1);
+  color: var(--pergamen);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.28);
+}
+.tl.duch:active { transform: translateY(2px); }
+.tl.zelene { background: linear-gradient(#7ee0c2, var(--zelena)); box-shadow: 0 5px 0 #2f8d75, var(--stin-m); }
+
+/* kruhové ikonové tlačítko */
+.ikona {
+  width: 3.1rem; height: 3.1rem;
+  min-height: 0;
+  display: grid; place-items: center;
+  padding: 0;
+  font-size: 1.35rem;
+  border-radius: 50%;
+  background: rgba(255,255,255,.13);
+  color: var(--pergamen);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.24);
+}
+.ikona:active { transform: scale(.92); box-shadow: inset 0 0 0 2px rgba(255,255,255,.24); }
+.ikona.vyp { opacity: .42; }
+
+/* ---------- postavy ---------- */
+
+.postava { display: block; overflow: visible; }
+.postava .stin { fill: rgba(0,0,0,.3); }
+
+.rytir { width: 100%; height: 100%; }
+.rytir-telo   { animation: pohupovani 2.6s ease-in-out infinite; transform-origin: 60px 140px; }
+.rytir-mec    { animation: mecIdle 3.4s ease-in-out infinite; transform-origin: 95px 72px; }
+.rytir-stit   { animation: stitIdle 3.9s ease-in-out infinite; transform-origin: 30px 84px; }
+@keyframes pohupovani { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-4px) } }
+@keyframes mecIdle    { 0%,100% { transform: rotate(0) } 50% { transform: rotate(-9deg) } }
+@keyframes stitIdle   { 0%,100% { transform: rotate(0) } 50% { transform: rotate(5deg) } }
+
+.rytir.utoci .rytir-mec  { animation: sek .5s ease-in-out; }
+.rytir.utoci .rytir-telo { animation: vypad .5s ease-in-out; }
+@keyframes sek   { 0% { transform: rotate(0) } 35% { transform: rotate(-58deg) } 70% { transform: rotate(46deg) } 100% { transform: rotate(0) } }
+@keyframes vypad { 0%,100% { transform: translateX(0) } 45% { transform: translateX(14px) } }
+
+.rytir.kryje .rytir-stit { animation: kryt .6s ease-in-out; }
+.rytir.kryje .rytir-telo { animation: uskok .6s ease-in-out; }
+@keyframes kryt  { 0%,100% { transform: rotate(0) translateX(0) } 40% { transform: rotate(-24deg) translateX(16px) } }
+@keyframes uskok { 0%,100% { transform: translateX(0) } 40% { transform: translateX(-12px) } }
+
+.drak { width: 100%; height: 100%; }
+.drak-telo         { animation: pohupovani 3.2s ease-in-out infinite; transform-origin: 120px 160px; }
+.drak-hlava        { animation: drakHlava 4.6s ease-in-out infinite; transform-origin: 130px 40px; }
+.drak-kridlo-pred  { animation: kridlo 1.5s ease-in-out infinite; transform-origin: 130px 76px; }
+.drak-kridlo-zad   { animation: kridlo 1.5s ease-in-out infinite .16s; transform-origin: 104px 68px; }
+.drak-oko          { animation: mrkOko 5.2s ease-in-out infinite; transform-origin: 100px 28px; }
+.drak-ohen         { opacity: 0; transform-origin: 58px 40px; }
+@keyframes kridlo     { 0%,100% { transform: rotate(0) scaleY(1) } 50% { transform: rotate(-13deg) scaleY(.82) } }
+@keyframes drakHlava  { 0%,100% { transform: rotate(0) } 50% { transform: rotate(-5deg) translateY(-3px) } }
+@keyframes mrkOko     { 0%,92%,100% { transform: scaleY(1) } 96% { transform: scaleY(.1) } }
+
+.drak.chrli .drak-ohen  { animation: ohen .75s ease-out; }
+.drak.chrli .drak-hlava { animation: napor .75s ease-out; }
+@keyframes ohen  { 0% { opacity: 0; transform: scaleX(.2) } 30% { opacity: 1; transform: scaleX(1.5) scaleY(1.5) }
+                   100% { opacity: 0; transform: scaleX(2.6) scaleY(.7) } }
+@keyframes napor { 0%,100% { transform: translateX(0) } 30% { transform: translateX(-12px) rotate(-8deg) } }
+
+.drak.zasah .drak-telo { animation: zasahDraka .5s ease-in-out; }
+@keyframes zasahDraka {
+  0%,100% { transform: translateX(0); filter: none; }
+  20% { transform: translateX(14px) rotate(4deg); filter: brightness(2.2) saturate(.3); }
+  60% { transform: translateX(-8px); filter: brightness(1.3); }
+}
+.drak.smutny .drak-hlava { animation: none; transform: rotate(12deg) translateY(10px); }
+.drak.smutny .drak-kridlo-pred,
+.drak.smutny .drak-kridlo-zad { animation-duration: 4s; }
+
+/* ---------- úvodní obrazovka ---------- */
+
+.uvod { align-items: center; justify-content: center; text-align: center; gap: .4rem; }
+.uvod h1 {
+  margin: 0;
+  font-size: clamp(2.1rem, 7vh, 4rem);
+  line-height: 1;
+  color: var(--zlata2);
+  text-shadow: 0 4px 0 #8a5a12, 0 12px 30px rgba(0,0,0,.5);
+  animation: prilet .7s cubic-bezier(.2,1.5,.4,1) both;
+}
+.uvod h2 {
+  margin: .1rem 0 .3rem;
+  font-size: clamp(.95rem, 2.7vh, 1.5rem);
+  font-weight: 700;
+  color: var(--pergamen);
+  opacity: .92;
+  animation: prilet .7s .1s cubic-bezier(.2,1.5,.4,1) both;
+}
+.uvod-scena {
+  display: flex; align-items: flex-end; justify-content: center;
+  gap: clamp(.5rem, 4vw, 3rem);
+  height: clamp(120px, 30vh, 260px);
+  margin: .2rem 0 .6rem;
+  animation: prilet .8s .2s cubic-bezier(.2,1.4,.4,1) both;
+}
+.uvod-scena > * { height: 100%; }
+.uvod-scena .drak { width: clamp(150px, 34vw, 330px); }
+.uvod-scena .rytir { width: clamp(80px, 18vw, 175px); }
+.uvod-tlacitka { display: flex; flex-wrap: wrap; gap: .7rem; justify-content: center;
+  animation: prilet .7s .3s cubic-bezier(.2,1.4,.4,1) both; }
+@keyframes prilet { from { opacity: 0; transform: translateY(26px) scale(.94) } to { opacity: 1; transform: none } }
+
+/* výběr hrdiny */
+.volba-hrdiny { display: flex; gap: 1.1rem; justify-content: center; flex-wrap: wrap; }
+.hrdina-karta {
+  background: rgba(255,255,255,.08);
+  border: 3px solid rgba(255,255,255,.2);
+  border-radius: var(--r);
+  padding: .8rem 1.1rem 1rem;
+  width: clamp(9rem, 26vw, 13rem);
+  cursor: pointer;
+  transition: transform .15s ease, border-color .15s ease, background .15s ease;
+  color: inherit; font: inherit;
+}
+.hrdina-karta:active { transform: scale(.96); }
+.hrdina-karta.vybrano { border-color: var(--zlata); background: rgba(242,181,68,.18); transform: translateY(-6px); }
+.hrdina-karta .tvar { height: clamp(90px, 18vh, 150px); }
+.hrdina-karta b { display: block; font-size: 1.25em; color: var(--zlata2); margin-top: .3rem; }
+.hrdina-karta span { font-size: .82em; opacity: .8; }
+
+/* ---------- komiks / příběh ---------- */
+
+.komiks { justify-content: center; align-items: center; gap: 1rem; }
+.komiks-panel {
+  position: relative;
+  width: min(94vw, 60rem);
+  background: linear-gradient(#fffaf0, var(--pergamen));
+  color: #3a2b18;
+  border-radius: var(--r);
+  border: 5px solid #6b4a22;
+  box-shadow: var(--stin-m);
+  padding: clamp(.8rem, 2.4vh, 1.6rem) clamp(1rem, 3vw, 2.2rem);
+  display: flex; flex-direction: column; align-items: center; gap: .5rem;
+  animation: panelPrichod .55s cubic-bezier(.2,1.3,.4,1) both;
+}
+@keyframes panelPrichod { from { opacity: 0; transform: translateY(28px) rotate(-1.2deg) } to { opacity: 1; transform: none } }
+.komiks-obraz {
+  width: 100%;
+  height: clamp(120px, 34vh, 320px);
+  display: flex; align-items: flex-end; justify-content: center;
+  gap: clamp(.4rem, 3vw, 2.4rem);
+  border-radius: var(--r-s);
+  background: radial-gradient(120% 100% at 50% 100%, #ffe0a8, #f3d29a 60%, #e3bd82);
+  overflow: hidden;
+  padding: .5rem;
+}
+.komiks-obraz > * { height: 100%; }
+.komiks-obraz .drak  { width: clamp(130px, 30vw, 300px); }
+.komiks-obraz .rytir { width: clamp(70px, 15vw, 150px); }
+.komiks-obraz .rekvizita { font-size: clamp(2.4rem, 11vh, 6rem); line-height: 1; align-self: center;
+  animation: pohupovani 2.4s ease-in-out infinite; }
+.komiks-text {
+  font-size: clamp(1rem, 2.6vh, 1.45rem);
+  line-height: 1.45; text-align: center;
+  font-weight: 600;
+  margin: 0;
+  min-height: 3.4em;
+  display: grid; place-items: center;
+}
+.komiks-ovladani { display: flex; align-items: center; gap: .8rem; }
+.komiks-tecky { display: flex; gap: .4rem; }
+.komiks-tecky i { width: .6rem; height: .6rem; border-radius: 50%; background: rgba(255,255,255,.3); }
+.komiks-tecky i.akt { background: var(--zlata); transform: scale(1.35); }
+
+/* ---------- mapa výpravy ---------- */
+
+.mapa-hlava {
+  display: flex; align-items: center; gap: .6rem;
+  flex: 0 0 auto;
+}
+.mapa-hlava h2 { margin: 0; font-size: clamp(1.05rem, 3vh, 1.7rem); color: var(--zlata2); flex: 1; }
+.pocitadlo-hvezd {
+  background: rgba(0,0,0,.3); border-radius: 999px;
+  padding: .35em .9em; font-weight: 800; font-size: 1.05em;
+  box-shadow: inset 0 0 0 2px rgba(242,181,68,.45);
+  white-space: nowrap;
+}
+
+.mapa-plocha {
+  position: relative;
+  flex: 1; min-height: 0;
+  margin-top: .5rem;
+  display: flex; align-items: center;
+  overflow-x: auto; overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+/* Na výšku by se stezka rozlezla přes celý displej, proto strop na výšku. */
+.mapa-cesta { position: relative; height: min(100%, 40rem); min-width: 100%; width: max(100%, 46rem); }
+.mapa-cesta svg.stezka { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mapa-cesta svg.stezka path {
+  fill: none; stroke: rgba(247,236,212,.3);
+  stroke-width: 6; stroke-linecap: round; stroke-dasharray: 2 14;
+}
+
+.uzel {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: clamp(3.4rem, 8.4vh, 5.2rem);
+  height: clamp(3.4rem, 8.4vh, 5.2rem);
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: clamp(1.3rem, 3.6vh, 2.1rem);
+  border: 3px solid rgba(255,255,255,.35);
+  background: linear-gradient(#4a3a74, #322554);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--stin-m);
+  transition: transform .15s ease;
+  font-family: inherit;
+  padding: 0;
+}
+.uzel:active { transform: translate(-50%, -50%) scale(.92); }
+.uzel .cislo {
+  position: absolute; top: -.35rem; left: -.35rem;
+  width: 1.7rem; height: 1.7rem;
+  border-radius: 50%;
+  background: var(--noc); color: var(--pergamen);
+  font-size: .82rem; font-weight: 800;
+  display: grid; place-items: center;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.3);
+}
+.uzel.zamceno { filter: grayscale(.85) brightness(.62); cursor: not-allowed; }
+.uzel.hotovo {
+  background: linear-gradient(#7ee0c2, var(--zelena));
+  border-color: var(--zlata2);
+}
+.uzel.hotovo::after {
+  content: "★";
+  position: absolute; bottom: -.55rem; right: -.35rem;
+  font-size: 1.1rem; color: var(--zlata2);
+  text-shadow: 0 2px 4px rgba(0,0,0,.5);
+}
+.uzel.dalsi {
+  background: linear-gradient(#ffd97a, var(--zlata));
+  border-color: #fff; color: #33240e;
+  animation: pulz 1.7s ease-in-out infinite;
+}
+@keyframes pulz {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,209,102,.62), var(--stin-m); }
+  55%     { box-shadow: 0 0 0 .85rem rgba(255,209,102,0), var(--stin-m); }
+}
+.uzel .stitek {
+  position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%);
+  margin-top: .3rem;
+  font-size: clamp(.6rem, 1.55vh, .8rem);
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--pergamen);
+  text-shadow: 0 2px 4px rgba(0,0,0,.8);
+  pointer-events: none;
+}
+.uzel.boss { width: clamp(4.2rem, 10.5vh, 6.4rem); height: clamp(4.2rem, 10.5vh, 6.4rem);
+  background: linear-gradient(#ff9d6e, var(--cervena)); border-color: var(--zlata2); }
+
+.mapa-rytir {
+  position: absolute;
+  width: clamp(2.6rem, 6.6vh, 4rem);
+  transform: translate(-50%, -100%);
+  transition: left .7s cubic-bezier(.4,1.4,.5,1), top .7s cubic-bezier(.4,1.4,.5,1);
+  pointer-events: none;
+  filter: drop-shadow(0 6px 8px rgba(0,0,0,.5));
+}
+.mapa-oddil {
+  position: absolute;
+  font-size: clamp(.62rem, 1.7vh, .88rem);
+  font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(247,236,212,.55);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* ---------- vrstva dialogu (nastavení, konec úrovně) ---------- */
+
+.zaves {
+  position: fixed; inset: 0; z-index: 80;
+  background: rgba(14,9,32,.78);
+  backdrop-filter: blur(3px);
+  display: grid; place-items: center;
+  padding: 1rem;
+  animation: zjev .22s ease both;
+}
+@keyframes zjev { from { opacity: 0 } to { opacity: 1 } }
+.dialog {
+  background: linear-gradient(#fffaf0, var(--pergamen));
+  color: #3a2b18;
+  border: 5px solid #6b4a22;
+  border-radius: var(--r);
+  box-shadow: var(--stin-m);
+  padding: clamp(1rem, 3vh, 1.8rem);
+  width: min(92vw, 32rem);
+  text-align: center;
+  animation: panelPrichod .4s cubic-bezier(.2,1.3,.4,1) both;
+}
+.dialog h3 { margin: 0 0 .5rem; font-size: clamp(1.3rem, 3.6vh, 2rem); color: #7a4a12; }
+.dialog p { margin: .3rem 0 .9rem; font-size: 1.02em; line-height: 1.4; font-weight: 600; }
+.dialog .radek { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
+.dialog .prepinac {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .8rem; padding: .5rem .2rem;
+  border-bottom: 2px dashed rgba(0,0,0,.12);
+  font-weight: 700;
+}
+.dialog .hvezdicky { font-size: clamp(1.8rem, 5vh, 3rem); letter-spacing: .1em; color: var(--zlata); }
+.dialog .hvezdicky i { display: inline-block; font-style: normal; animation: hvezdaSkok .5s cubic-bezier(.2,1.7,.4,1) both; }
+
+@keyframes hvezdaSkok { from { opacity: 0; transform: translateY(-24px) scale(.4) rotate(-40deg) } to { opacity: 1; transform: none } }
+
+/* ---------- efekty ---------- */
+
+.konfeta {
+  position: absolute; top: -4vh;
+  width: .8rem; height: 1.1rem; border-radius: 3px;
+  animation: pad linear both;
+}
+@keyframes pad {
+  to { transform: translateY(115vh) rotate(var(--otoc)); opacity: .1; }
+}
+.jiskra {
+  position: absolute;
+  width: .55rem; height: .55rem; border-radius: 50%;
+  background: #fff3c4;
+  box-shadow: 0 0 10px 3px rgba(255,220,120,.85);
+  animation: jiskraLet .8s ease-out both;
+}
+@keyframes jiskraLet {
+  from { transform: translate(0,0) scale(1); opacity: 1; }
+  to   { transform: translate(calc((var(--dx, 0) + 0px)), -3.5rem) scale(.1); opacity: 0; }
+}
+.velky-napis {
+  position: absolute; left: 50%; top: 38%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(2rem, 9vh, 4.6rem);
+  font-weight: 900;
+  color: var(--zlata2);
+  text-shadow: 0 5px 0 #8a5a12, 0 14px 34px rgba(0,0,0,.6);
+  animation: napisSkok 1.4s cubic-bezier(.2,1.5,.35,1) both;
+  white-space: nowrap;
+}
+@keyframes napisSkok {
+  0%   { opacity: 0; transform: translate(-50%,-50%) scale(.3) rotate(-9deg); }
+  22%  { opacity: 1; transform: translate(-50%,-50%) scale(1.12) rotate(2deg); }
+  38%  { transform: translate(-50%,-50%) scale(1) rotate(0); }
+  78%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%,-58%) scale(1.05); }
+}
+
+.zatres { animation: trest .42s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes trest {
+  10%,90% { transform: translateX(-3px) }
+  20%,80% { transform: translateX(6px) }
+  30%,50%,70% { transform: translateX(-9px) }
+  40%,60% { transform: translateX(9px) }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important; }
+}
