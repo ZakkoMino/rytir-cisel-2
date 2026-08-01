@@ -9,21 +9,45 @@ Dítě zkouší, jak dlouho potřebuje, a po druhé chybě mu nápověda naskoč
 
 ---
 
-## Jak to spustit
+## Jak to zahrát na tabletu přes web
+
+Jednou je potřeba zapnout GitHub Pages — token GitHub Actions je zapnout sám nesmí:
+
+> **Settings → Pages → Build and deployment → Source: `GitHub Actions`**
+
+Tím se odemkne workflow `.github/workflows/pages.yml`, který je už v repu.
+Pak stačí spustit ho (**Actions → Nasadit hru na GitHub Pages → Run workflow**)
+nebo cokoli pushnout do `main` — hra se nasadí sama.
+
+Adresa pak bude:
+
+> **https://zakkomino.github.io/rytir-cisel-2/**
+
+Kdo nechce Actions, může místo toho vybrat
+**Source: `Deploy from a branch` → `main` / `/ (root)`** — hra je statická,
+takže se to jen naservíruje jak leží (`.nojekyll` je v repu kvůli tomu).
+V tom případě je workflow zbytečný a jde smazat.
+
+Na iPadu doporučuju v Safari *Přidat na plochu* — hra se pak spustí
+na celou obrazovku bez adresního řádku.
+
+## Jak to spustit lokálně
 
 Nic se nekompiluje, nejsou žádné závislosti.
 
 **Nejrychleji:** otevřít `index.html` v prohlížeči (funguje i z `file://`).
 
-**Na tabletu** je potřeba to servírovat po síti, ať se dá otevřít z iPadu:
+Nebo servírovat po síti a otevřít z tabletu bez GitHub Pages:
 
 ```bash
 cd rytir-cisel-2
 python3 -m http.server 8000        # nebo: npx http-server -p 8000
 ```
 
-Na tabletu pak `http://<ip-počítače>:8000`. V Safari doporučuji
-*Přidat na plochu* — hra se spustí na celou obrazovku bez adresního řádku.
+Na tabletu pak `http://<ip-počítače>:8000`.
+
+Poznámka: v repu je i větev `gh-pages` — je to kopie `main` z pokusu
+o automatické zapnutí Pages. Nic ji nepotřebuje, jde smazat.
 
 Funguje offline, postup se ukládá do `localStorage` prohlížeče.
 
