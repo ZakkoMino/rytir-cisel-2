@@ -46,9 +46,6 @@ python3 -m http.server 8000        # nebo: npx http-server -p 8000
 
 Na tabletu pak `http://<ip-počítače>:8000`.
 
-Poznámka: v repu je i větev `gh-pages` — je to kopie `main` z pokusu
-o automatické zapnutí Pages. Nic ji nepotřebuje, jde smazat.
-
 Funguje offline, postup se ukládá do `localStorage` prohlížeče.
 
 ---
