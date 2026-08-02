@@ -41,7 +41,9 @@
 
   /* ---------- stav a postup ---------- */
 
-  var KEY = 'rytir-cisel-v1';
+  /* Na github.io mají všechna repa jednoho účtu stejný origin, takže i stejné
+     localStorage. Klíč proto obsahuje jméno repa, ať si projekty nepřepisují postup. */
+  var KEY = 'rytir-cisel-2/postup-v1';
   var State = (RC.State = {
     data: {
       hrdina: null,      // 'kvido' | 'bara'

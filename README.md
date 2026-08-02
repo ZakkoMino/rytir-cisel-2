@@ -9,27 +9,17 @@ Dítě zkouší, jak dlouho potřebuje, a po druhé chybě mu nápověda naskoč
 
 ---
 
-## Jak to zahrát na tabletu přes web
+## Zahrát si
 
-Jednou je potřeba zapnout GitHub Pages — token GitHub Actions je zapnout sám nesmí:
-
-> **Settings → Pages → Build and deployment → Source: `GitHub Actions`**
-
-Tím se odemkne workflow `.github/workflows/pages.yml`, který je už v repu.
-Pak stačí spustit ho (**Actions → Nasadit hru na GitHub Pages → Run workflow**)
-nebo cokoli pushnout do `main` — hra se nasadí sama.
-
-Adresa pak bude:
-
-> **https://zakkomino.github.io/rytir-cisel-2/**
-
-Kdo nechce Actions, může místo toho vybrat
-**Source: `Deploy from a branch` → `main` / `/ (root)`** — hra je statická,
-takže se to jen naservíruje jak leží (`.nojekyll` je v repu kvůli tomu).
-V tom případě je workflow zbytečný a jde smazat.
+> ### 🛡️ **https://zakkomino.github.io/rytir-cisel-2/**
 
 Na iPadu doporučuju v Safari *Přidat na plochu* — hra se pak spustí
 na celou obrazovku bez adresního řádku.
+
+Nasazuje se samo: každý push do `main` spustí
+`.github/workflows/pages.yml`, který obsah repa zabalí a pošle na Pages
+(Pages jsou nastavené na `Source: GitHub Actions`). Nic se nebuilduje,
+soubory jdou nahoru jak leží.
 
 ## Jak to spustit lokálně
 
