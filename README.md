@@ -16,10 +16,17 @@ Dítě zkouší, jak dlouho potřebuje, a po druhé chybě mu nápověda naskoč
 Na iPadu doporučuju v Safari *Přidat na plochu* — hra se pak spustí
 na celou obrazovku bez adresního řádku.
 
-Nasazuje se samo: každý push do `main` spustí
-`.github/workflows/pages.yml`, který obsah repa zabalí a pošle na Pages
-(Pages jsou nastavené na `Source: GitHub Actions`). Nic se nebuilduje,
-soubory jdou nahoru jak leží.
+Nasazuje se samo z `main`. Nic se nebuilduje, soubory jdou nahoru jak leží
+(`.nojekyll` je v repu proto, aby do nich nesahal Jekyll).
+
+Pozn.: teď na každý push běží nasazení **dvakrát** — GitHubův vlastní
+`pages build and deployment` (to dělá `Source: Deploy from a branch`)
+a k tomu `.github/workflows/pages.yml`. Publikují to samé, takže to nevadí,
+jen je to zbytečné. Zbavit se toho jde dvěma způsoby:
+
+- **Settings → Pages → Source: `GitHub Actions`** → GitHubův builder přestane
+  běhat a zůstane jen workflow z repa; nebo
+- ponechat `Deploy from a branch` a smazat `.github/workflows/pages.yml`.
 
 ## Jak to spustit lokálně
 
