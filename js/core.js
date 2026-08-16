@@ -174,11 +174,23 @@
     }
   });
 
-  /* ---------- český dabing (Web Speech API) ---------- */
+  /* ---------- český dabing (Web Speech API) ----------
+   * Věty se řadí do fronty a čekají jedna na druhou. Nic se neutne v půlce:
+   * „pět plus pět je deset“ se vždycky dopoví celé a teprve pak jde hra dál
+   * (Engine.api.hotovo čeká přes Voice.potom, než fronta domluví).
+   * Přeruší se jen to, co si vyžádá dítě samo – 🔊, další panel komiksu,
+   * odchod ze scény nebo další pokus po chybě.
+   */
 
   var Voice = (RC.Voice = {
     hlas: null,
     pripraven: false,
+
+    _fronta: [],     // věty, které čekají, až na ně přijde řada
+    _bezi: null,     // právě říkaná věta
+    _pak: [],        // co se má spustit, až se dopoví všechno
+    _selhani: 0,     // kolikrát po sobě se nepovedlo promluvit
+
     najdi: function () {
       if (!window.speechSynthesis) return;
       var vs = speechSynthesis.getVoices() || [];
@@ -186,21 +198,93 @@
       Voice.hlas = cz[0] || null;
       Voice.pripraven = vs.length > 0;
     },
-    rekni: function (text, opts) {
-      if (!State.data.hlas || !window.speechSynthesis || !text) return;
-      opts = opts || {};
-      try {
-        if (!opts.navazat) speechSynthesis.cancel();
-        var u = new SpeechSynthesisUtterance(String(text).replace(/\s+/g, ' ').trim());
-        u.lang = 'cs-CZ';
-        if (Voice.hlas) u.voice = Voice.hlas;
-        u.rate = opts.rate || 0.95;
-        u.pitch = opts.pitch || 1.05;
-        speechSynthesis.speak(u);
-      } catch (e) {}
+
+    /* Mluví se, nebo něco čeká ve frontě? */
+    mluvi: function () { return !!Voice._bezi || Voice._fronta.length > 0; },
+
+    /* Když hlas chybí nebo třikrát po sobě selhal, hra běží dál jen s textem. */
+    zapnuty: function () {
+      return !!(State.data.hlas && window.speechSynthesis && Voice._selhani < 3);
     },
+
+    /* rekni(text)                – zařadí se za to, co se právě říká
+       rekni(text, {prerus:true}) – utne, co běží, a řekne tohle */
+    rekni: function (text, opts) {
+      opts = opts || {};
+      text = text == null ? '' : String(text).replace(/\s+/g, ' ').trim();
+      if (opts.prerus) Voice._zahod();
+      if (!text || !Voice.zapnuty()) { Voice._odbav(); return; }
+      Voice._fronta.push({ text: text, rate: opts.rate || 0.95, pitch: opts.pitch || 1.05 });
+      Voice._pust();
+    },
+
+    /* Spustí fn, až se dopoví všechno ve frontě. Když se nemluví, hned. */
+    potom: function (fn) {
+      if (typeof fn !== 'function') return;
+      if (!Voice.mluvi()) { setTimeout(fn, 0); return; }
+      Voice._pak.push(fn);
+    },
+
+    /* Ticho. Čekající pokračování se pustí dál, ať hra nikde neuvízne. */
     ticho: function () {
+      Voice._zahod();
+      Voice._odbav();
+    },
+
+    _zahod: function () {
+      Voice._fronta.length = 0;
+      var b = Voice._bezi;
+      Voice._bezi = null;
+      if (b) clearTimeout(b.hlidac);
       if (window.speechSynthesis) { try { speechSynthesis.cancel(); } catch (e) {} }
+    },
+
+    _odbav: function () {
+      if (Voice.mluvi()) return;
+      var cekaji = Voice._pak;
+      Voice._pak = [];
+      for (var i = 0; i < cekaji.length; i++) {
+        try { cekaji[i](); } catch (e) {}
+      }
+    },
+
+    _pust: function () {
+      if (Voice._bezi || !Voice._fronta.length) return;
+      var veta = Voice._fronta.shift();
+      var zaznam = { hotova: false };
+      Voice._bezi = zaznam;
+
+      function konec(selhalo) {
+        if (Voice._bezi !== zaznam || zaznam.hotova) return;   // mezitím se přerušilo
+        zaznam.hotova = true;
+        clearTimeout(zaznam.hlidac);
+        Voice._bezi = null;
+        Voice._selhani = selhalo ? Voice._selhani + 1 : 0;
+        if (Voice._fronta.length) Voice._pust();
+        else Voice._odbav();
+      }
+
+      /* Pojistka: kdyby prohlížeč konec věty neohlásil, hra se nesmí zaseknout. */
+      zaznam.hlidac = setTimeout(function () { konec(true); }, 1800 + veta.text.length * 110);
+
+      /* Chrome umí zahodit speak() volaný hned po cancel() – dáme mu chvilku. */
+      setTimeout(function () {
+        if (Voice._bezi !== zaznam) return;
+        try {
+          var u = new SpeechSynthesisUtterance(veta.text);
+          u.lang = 'cs-CZ';
+          if (Voice.hlas) u.voice = Voice.hlas;
+          u.rate = veta.rate;
+          u.pitch = veta.pitch;
+          u.onend = function () { konec(false); };
+          u.onerror = function (e) {
+            var duvod = e && e.error;
+            konec(!(duvod === 'canceled' || duvod === 'interrupted'));
+          };
+          speechSynthesis.speak(u);
+          if (speechSynthesis.paused) speechSynthesis.resume();   // Chrome se občas sám pozastaví
+        } catch (e) { konec(true); }
+      }, 60);
     }
   });
   if (window.speechSynthesis) {

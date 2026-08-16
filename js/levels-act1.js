@@ -1,5 +1,5 @@
 /* Rytíř Čísel – AKT I: Cesta do deseti
- * 1. Kovárna       – počítání předmětů do 10 (jeden předmět = jedno číslo)
+ * 1. Kovárna       – sčítání a odčítání do 10 na věcech (kovářské zakázky)
  * 2. Most přes rokli – rozklad čísel do 10
  * 3. Číselná stezka  – sčítání a odčítání do 10 na číselné ose
  * 4. Kouzelný štít   – dvojice do deseti
@@ -9,15 +9,43 @@
   'use strict';
   var RC = window.RC;
 
-  /* ---------- 1. KOVÁRNA ---------- */
+  /* ---------- 1. KOVÁRNA ----------
+   * Kovářské zakázky: krátký vtipný příběh se před dítětem odehraje na kovadlině
+   * (věci přiletí, koza je sežere) a zároveň se vedle skládá příklad – 3 + 4 = ?
+   * Poslední dvě kola jsou o třech členech, ať to má kam růst.
+   * Jiné zastávky počítají jinak: 3 na číselné ose, 4 dvojice do deseti.
+   */
 
-  var VECI = [
-    { znak: '⚔️', kolik: 'mečů',   jeden: 'meč' },
-    { znak: '🛡️', kolik: 'štítů',  jeden: 'štít' },
-    { znak: '🗝️', kolik: 'klíčů',  jeden: 'klíč' },
-    { znak: '🔔', kolik: 'zvonů',  jeden: 'zvon' },
-    { znak: '🍎', kolik: 'jablek', jeden: 'jablko' },
-    { znak: '👑', kolik: 'korunek', jeden: 'korunka' }
+  var ZAKAZKY = [
+    { znak: '🗝️', cisla: [3, 4], znamenka: ['+'],
+      pribeh: 'Kovář ukoval tři klíče a učedník mu přinesl další čtyři.',
+      otazka: 'Kolik mají klíčů dohromady?',
+      napoveda: 'Máš 3 a přidáváš 4. Počítej od tří dál: čtyři, pět, šest…' },
+
+    { znak: '🔔', cisla: [9, 4], znamenka: ['−'], host: '🙋',
+      pribeh: 'Na stojanu viselo devět zvonů. Čtyři si odnesl zvoník.',
+      otazka: 'Kolik zvonů zůstalo na stojanu?',
+      napoveda: 'Ubírej po jednom od devíti: osm, sedm… a takhle čtyřikrát.' },
+
+    { znak: '🛡️', cisla: [5, 3], znamenka: ['+'],
+      pribeh: 'Kovář vyleštil pět štítů a po svačině ještě tři.',
+      otazka: 'Kolik štítů vyleštil?',
+      napoveda: 'Od pěti přidávej po jednom: šest, sedm…' },
+
+    { znak: '🍎', cisla: [10, 3], znamenka: ['−'], host: '🐐',
+      pribeh: 'Kovář si nachystal deset jablek. Tři mu slupla koza Bekana.',
+      otazka: 'Kolik jablek kovářovi zbylo?',
+      napoveda: 'Od desíti uber po jednom: devět, osm…' },
+
+    { znak: '⚔️', cisla: [4, 3, 2], znamenka: ['+', '+'],
+      pribeh: 'Do bedny dal kovář čtyři meče, pak tři a nakonec ještě dva.',
+      otazka: 'Kolik mečů je v bedně?',
+      napoveda: 'Sečti nejdřív 4 a 3. K tomu, co ti vyjde, přidej ještě 2.' },
+
+    { znak: '🔩', cisla: [8, 2, 3], znamenka: ['−', '−'], host: '🔥',
+      pribeh: 'Kovář měl osm nýtů. Dva mu spadly do ohně a tři zatloukl do štítu.',
+      otazka: 'Kolik nýtů mu zbylo?',
+      napoveda: 'Nejdřív uber z osmi dva. A z toho, co zbude, uber ještě tři.' }
   ];
 
   RC.levels.push({
@@ -25,47 +53,135 @@
     akt: 1,
     nazev: 'Kovárna',
     ikona: '⚒️',
-    popis: 'Spočítej, co kovář nakoval.',
-    uvod: 'Vítej v kovárně. Kovář ti dá výzbroj, ale nejdřív mu pomoz spočítat, co nakoval.',
-    odmena: 'Kovář ti dal meč a štít. Můžeš vyrazit na cestu!',
-    kola: 5,
+    popis: 'Spočítej kovářovy zakázky.',
+    uvod: 'Vítej v kovárně. Kovář kuje, učedník nosí a koza Bekana všechno sní. ' +
+          'Dívej se, co se na kovadlině stane, a spočítej to za ně.',
+    odmena: 'Kovář ti dal meč a štít. Umíš přidávat i ubírat!',
+    kola: 6,
     vytvor: function (api, i) {
-      var pocty = [4, 7, 6, 9, 10];
-      var n = pocty[i];
-      var vec = VECI[i % VECI.length];
+      var z = ZAKAZKY[i % ZAKAZKY.length];
 
-      api.zadani('Kolik je <b>' + vec.kolik + '</b>? Klepej na ně a počítej.',
-                 'Kolik je ' + vec.kolik + '? Klepej na ně a počítej.');
-      api.napoveda('Klepni na každý ' + vec.jeden + ' jen jednou a nahlas počítej: jeden, dva, tři…');
+      /* Výsledek se dopočítá z příkladu, ať se dá zakázka přidat jedním řádkem. */
+      var vysledek = z.cisla[0];
+      z.znamenka.forEach(function (zn, k) {
+        vysledek = zn === '+' ? vysledek + z.cisla[k + 1] : vysledek - z.cisla[k + 1];
+      });
 
+      api.zadani(z.pribeh + ' <b>' + z.otazka + '</b>', z.pribeh + ' ' + z.otazka);
+      api.napoveda(z.napoveda);
+
+      /* ---- kovárna ---- */
       var dilna = RC.el('div', 'kovarna-dilna');
       dilna.appendChild(RC.el('div', 'kovar', '🧑‍🏭'));
 
-      var vitrina = RC.el('div', 'kovarna-vitrina');
-      var hromada = RC.Vis.hromada(n, vec.znak);
-      vitrina.appendChild(hromada);
-      dilna.appendChild(vitrina);
+      var pult = RC.el('div', 'kovarna-pult');
+      var veci = RC.Vis.hromada(0, z.znak, { cls: 'staticka' });
+      var host = RC.el('div', 'kovarna-host', z.host || '');
+      pult.appendChild(veci);
+      pult.appendChild(host);
+      dilna.appendChild(pult);
       api.telo.appendChild(dilna);
 
-      var citac = RC.el('div', 'pocitadlo', '– –');
-      api.telo.appendChild(citac);
+      var priklad = RC.el('div', 'priklad', '<b>?</b>');
+      api.telo.appendChild(priklad);
 
-      var spocitano = 0;
-      Array.prototype.forEach.call(hromada.children, function (v) {
-        v.addEventListener('click', function () {
-          if (v.classList.contains('spocitana')) return;
-          spocitano++;
-          v.classList.add('spocitana');
-          v.dataset.n = String(spocitano);
-          api.pocitaciTon(spocitano);
-          api.rekni(String(spocitano));
-          citac.textContent = String(spocitano);
-        });
+      var znovu = RC.tlacitko('▶ Ukázat znovu', 'duch', function () {
+        if (!bezi && !RC.Engine.zamek) prehraj();
       });
+      api.telo.appendChild(znovu);
 
-      api.telo.appendChild(api.volby(n, api.okoliVoleb(n, 4, 1, 12), {
-        pred: function () { citac.textContent = String(n); }
-      }));
+      /* Příklad se skládá spolu s příběhem: 3 → 3 + 4 → 3 + 4 = ? */
+      function zapis(clenu, sVysledkem) {
+        var s = '<b>' + z.cisla[0] + '</b>';
+        for (var k = 0; k < clenu - 1; k++) {
+          s += ' ' + z.znamenka[k] + ' <b>' + z.cisla[k + 1] + '</b>';
+        }
+        return s + (sVysledkem ? ' = ' + sVysledkem : '');
+      }
+      function mluvenyPriklad() {
+        var s = String(z.cisla[0]);
+        z.znamenka.forEach(function (zn, k) {
+          s += (zn === '+' ? ' plus ' : ' mínus ') + z.cisla[k + 1];
+        });
+        return s;
+      }
+
+      /* Každá skupina má svou barvu podložky, ať je „3 a 4“ vidět na první pohled. */
+      function pridej(n, hotovo, skupina) {
+        var k = 0;
+        (function dalsi() {
+          if (k >= n) { setTimeout(hotovo, 280); return; }
+          var v = RC.el('span', 'vec sk' + ((skupina || 0) % 3), z.znak);
+          veci.appendChild(v);
+          api.pocitaciTon(veci.children.length);
+          k++;
+          setTimeout(dalsi, 240);
+        })();
+      }
+
+      function uber(n, hotovo) {
+        if (z.host) host.classList.add('vidi');
+        var k = 0;
+        (function dalsi() {
+          if (k >= n) {
+            setTimeout(function () { host.classList.remove('vidi'); hotovo(); }, 300);
+            return;
+          }
+          var zbyle = veci.querySelectorAll('.vec:not(.pryc)');
+          var posledni = zbyle[zbyle.length - 1];
+          if (posledni) {
+            posledni.classList.add('pryc');
+            api.sfx('pop');
+            (function (uzel) { setTimeout(function () { uzel.remove(); }, 440); })(posledni);
+          }
+          k++;
+          setTimeout(dalsi, 300);
+        })();
+      }
+
+      var bezi = false;
+      var volby = null;
+
+      function prehraj() {
+        bezi = true;
+        znovu.disabled = true;
+        veci.innerHTML = '';
+        host.classList.remove('vidi');
+        priklad.innerHTML = '<b>?</b>';
+
+        var krok = 0;
+        pridej(z.cisla[0], function () {
+          priklad.innerHTML = zapis(1);
+          pokracuj();
+        }, 0);
+
+        function pokracuj() {
+          if (krok >= z.znamenka.length) return dokonci();
+          var zn = z.znamenka[krok];
+          var kolik = z.cisla[krok + 1];
+          krok++;
+          priklad.innerHTML = zapis(krok + 1);
+          if (zn === '+') pridej(kolik, pokracuj, krok);
+          else uber(kolik, pokracuj);
+        }
+
+        function dokonci() {
+          bezi = false;
+          znovu.disabled = false;
+          priklad.innerHTML = zapis(z.cisla.length, '<b>?</b>');
+          if (volby) return;              // při opakovaném přehrání už tlačítka jsou
+          volby = api.volby(vysledek, api.okoliVoleb(vysledek, 4, 0, 10), {
+            pauza: 1000,
+            pred: function () {
+              priklad.innerHTML = zapis(z.cisla.length, '<b class="miz">' + vysledek + '</b>');
+              api.rekni(mluvenyPriklad() + ' je ' + vysledek + '.');
+            }
+          });
+          api.telo.appendChild(volby);
+        }
+      }
+
+      prehraj();
     }
   });
 
@@ -169,9 +285,10 @@
           prekresli();
 
           if (soucet() === N && polozeno.length === 2) {
-            api.rekni(polozeno[0] + ' a ' + polozeno[1] + ' je ' + N + '. Most drží!');
+            api.rekni(polozeno[0] + ' a ' + polozeno[1] + ' je ' + N + '. Most drží!',
+                      { prerus: true });
             rytirNaMoste.style.left = '100%';
-            api.hotovo({ pauza: 1500 });
+            api.hotovo({ pauza: 1100 });
           } else if (polozeno.length === 2) {
             api.chyba(p, 'Ještě chybí ' + (N - soucet()) + '. Prkna spadla, zkus jiná.');
             /* Dvojice nesedí – prkna spadnou do rokle, ať se dá hned zkusit jiná. */
@@ -249,8 +366,9 @@
         (function dalsi() {
           k++;
           if (k > kroku) {
-            api.rekni('Jsi na ' + cil + '. ' + start + ' ' + (vpred ? 'plus' : 'minus') + ' ' + kroku + ' je ' + cil + '.');
-            api.hotovo({ pauza: 1400 });
+            api.rekni('Jsi na ' + cil + '. ' + start + ' ' + (vpred ? 'plus' : 'minus') +
+                      ' ' + kroku + ' je ' + cil + '.', { prerus: true });
+            api.hotovo({ pauza: 800 });
             return;
           }
           var idx = vpred ? start + k : start - k;
@@ -319,14 +437,16 @@
       }
 
       api.telo.appendChild(api.volby(chybi, api.okoliVoleb(chybi, 4, 0, 10), {
-        pauza: 1600,
+        pauza: 1500,
         pred: function () {
+          /* Výsledek se řekne hned, ať se stihne zařadit před pochvalu
+             a hra na něj počkala; nýty se mezitím rozsvěcují. */
+          api.rekni(sviti + ' a ' + chybi + ' je deset.');
           var k = sviti;
           (function dalsi() {
             if (k >= 10) {
               obal.classList.add('hotovo');
               RC.FX.jiskry(obal, 16);
-              api.rekni(sviti + ' a ' + chybi + ' je deset.');
               return;
             }
             nyty[k].classList.remove('zhasly');
@@ -390,7 +510,7 @@
 
       api.telo.appendChild(api.volby(spravne, ['<', '=', '>'], {
         cls: 'znamenka',
-        pauza: 1500,
+        pauza: 1100,
         pred: function () {
           vahy.classList.add(l > p ? 'vlevo' : (l < p ? 'vpravo' : 'rovnost'));
           api.rekni(spravne === '=' ? l + ' je stejně jako ' + p

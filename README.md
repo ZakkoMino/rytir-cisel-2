@@ -65,9 +65,9 @@ a nikdo ho nikdy počítat nenaučil. Rytíř ho to naučí. Žádné zabíjení
 
 | # | Zastávka | Co se procvičuje | Jak se to hraje |
 |---|----------|------------------|-----------------|
-| 1 | Kovárna | počítání předmětů do 10 | dítě klepe na každý předmět, ten se očísluje a cinkne — jeden předmět = jedno číslo |
+| 1 | Kovárna | sčítání a odčítání do 10 na věcech | vtipná kovářská zakázka se odehraje na kovadlině (učedník přinese, koza sní) a vedle se skládá příklad `3 + 4 = ?`; poslední dvě kola mají tři členy |
 | 2 | Most přes rokli | rozklad čísel do 10 | mezeru široké *N* je nutné vyplnit **dvěma** prkny; prkno je přesně tak dlouhé, kolik políček zaplní |
-| 3 | Číselná stezka | sčítání a odčítání do 10 | „Stojíš na 3, udělej 4 kroky vpřed“ — dítě klepne na cílový kámen, rytíř tam odskáče krok po kroku |
+| 3 | Číselná stezka | sčítání a odčítání do 10 **zpaměti** | „Stojíš na 3, udělej 4 kroky vpřed“ — dítě klepne na cílový kámen, rytíř tam odskáče krok po kroku |
 | 4 | Kouzelný štít | dvojice do deseti | na štítu svítí 7 nýtů, kolik chybí do 10; vedle je desítkový rámec |
 | 5 | Strážná brána | porovnávání `<` `=` `>` | dvě stráže na váhách, dítě vybere znaménko, váhy se překlopí |
 
@@ -84,6 +84,10 @@ a nikdo ho nikdy počítat nenaučil. Rytíř ho to naučí. Žádné zabíjení
 Přechod přes desítku (8. a 9. zastávka) je záměrně postavený **vizuálně** —
 dítě nejdřív uvidí, co se s desítkou děje, a teprve pak odpovídá.
 
+Žádné dvě zastávky se nehrají stejně. Sčítání a odčítání do 10 je schválně
+dvakrát, ale pokaždé jinak: v **kovárně** na věcech, které dítě vidí přibývat
+a ubývat (příběh → příklad), na **číselné stezce** už jen v hlavě po ose.
+
 ---
 
 ## Co je v tom pro dítě udělané schválně
@@ -95,6 +99,12 @@ dítě nejdřív uvidí, co se s desítkou děje, a teprve pak odpovídá.
 - **Čte to nahlas česky** (Web Speech API). Sedmileté dítě po první třídě
   čte pomalu, takže každé zadání se dá kdykoli přehrát znovu 🔊.
   Když v systému není český hlas, hra funguje dál jen s textem.
+- **Věta se vždycky dopoví.** „Pět plus pět je deset“ doběhne celé a teprve
+  potom začne další úloha — věty stojí ve frontě a hra na ně čeká.
+  Přeruší se jen to, co si vyžádá dítě samo: klepnutí na 🔊, další panel
+  komiksu, odchod ze zastávky a odpověď (rozečtené zadání už nepotřebuje slyšet).
+  Kdyby prohlížeč konec věty neohlásil, pojistka hru po chvilce pustí dál
+  a po třech takových větách se dabing sám vypne — text zůstává.
 - **Desítkový rámec** (2 × 5 okýnek) se opakuje přes všechny zastávky,
   ať si dítě zvykne vidět deset na první pohled.
 - **Dotyk, ne přesnost.** Všechny cíle jsou velké, nikde není drag & drop

@@ -214,13 +214,34 @@
   width: 100%;
 }
 .kovar { font-size: clamp(2.4rem, 9vh, 5rem); animation: pohupovani 2.2s ease-in-out infinite; }
-.kovarna-vitrina {
+/* Kovadlina, na které se příběh odehrává – věci na ni přilétají a mizí z ní. */
+.kovarna-pult {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
   background: rgba(0,0,0,.26);
   border-radius: var(--r);
   box-shadow: inset 0 0 0 3px rgba(247,236,212,.28);
   padding: clamp(.5rem, 1.8vh, 1rem);
   max-width: min(76vw, 40rem);
+  min-width: min(60vw, 24rem);
+  min-height: clamp(4rem, 13vh, 7rem);
 }
+.kovarna-pult .hromada { min-height: clamp(2rem, 6vh, 3.6rem); }
+/* Barevná podložka podle skupiny – „tři a k tomu čtyři“ je vidět na první pohled. */
+.kovarna-pult .vec { border-radius: 12px; padding: .1em .12em; }
+.kovarna-pult .vec.sk0 { background: rgba(242,181,68,.26); }
+.kovarna-pult .vec.sk1 { background: rgba(110,168,255,.28); }
+.kovarna-pult .vec.sk2 { background: rgba(78,195,165,.28); }
+.kovarna-pult .vec.pryc { animation: mizeni .44s ease-out both; }
+/* Kdo si věci odnáší – koza, zvoník, oheň. Vykoukne jen na chvilku. */
+.kovarna-host {
+  position: absolute; right: .1rem; bottom: calc(100% - 1.4rem);
+  font-size: clamp(1.6rem, 5.4vh, 3rem); line-height: 1;
+  opacity: 0; transform: translateY(.6rem) scale(.5);
+  transition: opacity .22s ease, transform .32s cubic-bezier(.2,1.6,.4,1);
+  pointer-events: none;
+}
+.kovarna-host.vidi { opacity: 1; transform: none; }
 
 /* ---------- 2. Most přes rokli ---------- */
 

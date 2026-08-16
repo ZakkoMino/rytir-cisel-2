@@ -78,7 +78,9 @@
 
     var btnDal = RC.tlacitko('Dál →', 'velke', function () { dal(); });
     var btnPresk = RC.tlacitko('Přeskočit', 'duch', function () { RC.Voice.ticho(); hotovo(); });
-    var btnRepro = RC.tlacitko('🔊', 'ikona', function () { RC.Voice.rekni(RC.t(panely[i].t)); });
+    var btnRepro = RC.tlacitko('🔊', 'ikona', function () {
+      RC.Voice.rekni(RC.t(panely[i].t), { prerus: true });
+    });
     btnRepro.setAttribute('aria-label', 'Přečti znovu');
 
     ovl.appendChild(btnPresk);
@@ -102,7 +104,8 @@
       }
       btnDal.textContent = i === panely.length - 1 ? (popis || 'Jdeme!') : 'Dál →';
       btnPresk.style.visibility = i === panely.length - 1 ? 'hidden' : '';
-      RC.Voice.rekni(RC.t(p.t));
+      /* Nový panel utne ten předchozí – o další si klepnutím řeklo dítě samo. */
+      RC.Voice.rekni(RC.t(p.t), { prerus: true });
       panel.style.animation = 'none';
       void panel.offsetWidth;
       panel.style.animation = '';
@@ -181,11 +184,17 @@
         Array.prototype.forEach.call(volba.children, function (c) { c.classList.remove('vybrano'); });
         k.classList.add('vybrano');
         RC.Voice.rekni(h.jm + '. Výborně!');
-        setTimeout(function () {
+        /* Komiks začne, až se jméno dopoví – ne uprostřed věty. */
+        var casPryc = false, hlasDomluvil = false, uzJdeme = false;
+        function dal() {
+          if (uzJdeme || !casPryc || !hlasDomluvil) return;
+          uzJdeme = true;
           RC.State.data.videlUvod = true;
           RC.State.save();
           komiks(UVOD, 'Vyrazit na cestu!', function () { RC.Map.zobraz(); });
-        }, 900);
+        }
+        setTimeout(function () { casPryc = true; dal(); }, 700);
+        RC.Voice.potom(function () { hlasDomluvil = true; dal(); });
       });
       volba.appendChild(k);
     });
@@ -250,7 +259,8 @@
           if (!odemcena) {
             RC.Audio.sfx('vedle');
             RC.FX.zatres(uzel);
-            RC.Voice.rekni('Tuhle zastávku ještě neumíme otevřít. Nejdřív dokonči tu předchozí.');
+            RC.Voice.rekni('Tuhle zastávku ještě neumíme otevřít. Nejdřív dokonči tu předchozí.',
+                           { prerus: true });
             return;
           }
           RC.Audio.sfx('odemk');

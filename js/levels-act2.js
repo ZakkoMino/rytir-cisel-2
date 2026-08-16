@@ -44,7 +44,7 @@
         api.napoveda('První hnízdo je plné, to je <b>10</b>. Ve druhém jsou ještě ' + druhe +
                      '. Deset a ' + druhe + ' je…');
         api.telo.appendChild(api.volby(n, api.okoliVoleb(n, 4, 10, 20), {
-          pauza: 1300,
+          pauza: 800,
           pred: function () { api.rekni('Deset a ' + druhe + ' je ' + n + '.'); }
         }));
 
@@ -67,8 +67,8 @@
           r2.classList.toggle('plny', pocet >= 20);
           citac.textContent = String(pocet);
           if (pocet === n) {
-            api.rekni(n + ' vajec. To je deset a ' + druhe + '.');
-            api.hotovo({ pauza: 1200 });
+            api.rekni(n + ' vajec. To je deset a ' + druhe + '.', { prerus: true });
+            api.hotovo({ pauza: 800 });
           }
         }
 
@@ -160,8 +160,9 @@
         (function dalsi() {
           k++;
           if (k > o) {
-            api.rekni(start + ' ' + (nahoru ? 'plus' : 'minus') + ' ' + o + ' je ' + cil + '.');
-            api.hotovo({ pauza: 1300 });
+            api.rekni(start + ' ' + (nahoru ? 'plus' : 'minus') + ' ' + o + ' je ' + cil + '.',
+                      { prerus: true });
+            api.hotovo({ pauza: 800 });
             return;
           }
           var idx = nahoru ? start + k : start - k;
@@ -231,7 +232,10 @@
         nalito++; zbyva--;
         api.pocitaciTon(nalito);
         prekresli();
-        if (nalito === 10) { api.sfx('odemk'); api.rekni('Deset! První láhev je plná, přelévá se.'); }
+        if (nalito === 10) {
+          api.sfx('odemk');
+          api.rekni('Deset! První láhev je plná, přelévá se.', { prerus: true });
+        }
         if (zbyva > 0) {
           btn.innerHTML = '💧 Přilij kapku (' + zbyva + ')';
         } else {
@@ -244,7 +248,7 @@
       api.telo.appendChild(kapatko);
 
       var otazka = api.volby(soucet, api.okoliVoleb(soucet, 4, 10, 20), {
-        pauza: 1300,
+        pauza: 900,
         pred: function () {
           lahve[1].obal.classList.add('plna');
           api.rekni('Deset a ' + (soucet - 10) + ' je ' + soucet + '.');
@@ -307,10 +311,9 @@
         citac.textContent = vyndano < uber ? 'zbývá vyndat: ' + (uber - vyndano) : 'vyndáno ✔';
         if (vyndano === uber && !otazkaVlozena) {
           otazkaVlozena = true;
-          api.rekni('A kolik mincí zbylo v truhlách?');
-          api.zadani('Kolik mincí zbylo?');
+          api.zadani('Kolik mincí zbylo?', 'A kolik mincí zbylo v truhlách?');
           api.telo.appendChild(api.volby(zbytek, api.okoliVoleb(zbytek, 4, 0, 15), {
-            pauza: 1300,
+            pauza: 900,
             pred: function () { api.rekni(celkem + ' bez ' + uber + ' je ' + zbytek + '.'); }
           }));
         }
@@ -368,18 +371,20 @@
       var priklad = RC.el('div', 'priklad', u.text + ' = ?');
       stred.appendChild(priklad);
       var volby = api.volby(u.vysl, api.okoliVoleb(u.vysl, 4, u.min, u.max), {
-        pauza: 1700, bezNapisu: true,
+        pauza: 1500, bezNapisu: true,
         pred: function () {
           api.sfx('mec');
           rytirSvg.classList.add('utoci');
+          /* Výsledek se řekne hned – pochvala se zařadí až za něj a hra počká,
+             než se dopoví. Rozbití štítu je jen doprovodná animace. */
+          api.rekni(i === 4 ? 'Devět a sedm je šestnáct! Štít je rozbitý.'
+                            : u.text.replace('−', 'mínus').replace('+', 'plus') +
+                              ' je ' + u.vysl + '! Štít je rozbitý.');
           setTimeout(function () {
             drakSvg.classList.add('zasah');
             var zbyle = stity.querySelectorAll('i:not(.pryc)');
             if (zbyle.length) zbyle[zbyle.length - 1].classList.add('pryc');
             RC.FX.jiskry(drakSvg, 14);
-            api.rekni(i === 4 ? 'Devět a sedm je šestnáct! Štít je rozbitý.'
-                              : u.text.replace('−', 'mínus').replace('+', 'plus') +
-                                ' je ' + u.vysl + '! Štít je rozbitý.');
           }, 280);
         }
       });

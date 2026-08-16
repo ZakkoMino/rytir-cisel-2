@@ -19,6 +19,7 @@
     uroven: null,
     kolo: 0,
     chybyVKole: 0,
+    beh: 0,              // číslo rozehrané úrovně; odchodem ze scény se zvýší
     poDokonceni: null,   // nastavuje main.js
     naMapu: null,        // nastavuje main.js
 
@@ -27,6 +28,7 @@
       Engine.kolo = 0;
       Engine.chybyVKole = 0;
       Engine.zamek = false;
+      Engine.beh++;
 
       var scena = RC.el('div', 'uroven');
       scena.innerHTML = RC.Art.kulisa(uroven.akt === 2 ? 'hora' : '');
@@ -37,6 +39,7 @@
       var lista = RC.el('header', 'uroven-lista');
 
       var zpet = RC.tlacitko('←', 'ikona', function () {
+        Engine.beh++;                 // rozehraná kola už nemají kam pokračovat
         RC.Voice.ticho();
         Engine.naMapu && Engine.naMapu();
       });
@@ -154,11 +157,12 @@
       if (typeof n === 'function') { n(); return; }
       Engine.dom.nap.innerHTML = '<span class="ik">💡</span><span>' + n + '</span>';
       Engine.dom.nap.classList.add('vidi');
-      if (naKliknuti) RC.Voice.rekni(n);
+      /* O nápovědu i o zadání si říká dítě samo – ta smí skočit do řeči. */
+      if (naKliknuti) RC.Voice.rekni(n, { prerus: true });
     },
 
     rekniZadani: function () {
-      if (Engine._zadani) RC.Voice.rekni(Engine._zadani);
+      if (Engine._zadani) RC.Voice.rekni(Engine._zadani, { prerus: true });
     },
 
     /* ---------- API pro úrovně ---------- */
@@ -181,7 +185,9 @@
       sfx: function (n) { RC.Audio.sfx(n); },
       pocitaciTon: function (n) { RC.Audio.countTone(n); },
 
-      /* Kolo vyřešeno – oslavíme a jdeme na další. */
+      /* Kolo vyřešeno – oslavíme a jdeme na další.
+       * Další kolo začne, až je splněné obojí: doběhla animace (opts.pauza)
+       * a hlas dopověděl výsledek i pochvalu. Nikdy se nic neutne v půlce. */
       hotovo: function (opts) {
         opts = opts || {};
         if (Engine.zamek) return;
@@ -189,12 +195,24 @@
         RC.Audio.sfx('spravne');
         if (!opts.bezNapisu) RC.FX.napis(RC.pick(POCHVALY));
         RC.FX.konfety(opts.konfety || 18);
+        /* Pochvala se zařadí za výsledek, který úroveň právě říká. */
         RC.Voice.rekni(RC.pick(POCHVALY));
         Engine.kolo++;
-        setTimeout(function () {
+
+        var beh = Engine.beh;
+        var casPryc = false, hlasDomluvil = false, uzJdeme = false;
+        function pokracuj() {
+          if (uzJdeme || !casPryc || !hlasDomluvil) return;
+          uzJdeme = true;
+          if (beh !== Engine.beh) return;      // mezitím jsme ze scény odešli
           Engine.dom.telo.classList.add('mizi');
-          setTimeout(function () { Engine.dalsiKolo(); }, 240);
-        }, opts.pauza || 950);
+          setTimeout(function () {
+            if (beh !== Engine.beh) return;
+            Engine.dalsiKolo();
+          }, 240);
+        }
+        setTimeout(function () { casPryc = true; pokracuj(); }, opts.pauza || 900);
+        RC.Voice.potom(function () { hlasDomluvil = true; pokracuj(); });
       },
 
       /* Chyba – nic se neodečítá, jen jemná zpětná vazba a po druhé chybě nápověda. */
@@ -207,7 +225,8 @@
         }
         Engine.chybyVKole++;
         var zprava = text || RC.pick(POVZBUZENI);
-        RC.Voice.rekni(zprava);
+        /* Další pokus přebije povzbuzení k tomu předchozímu, ať se nehromadí. */
+        RC.Voice.rekni(zprava, { prerus: true });
         if (Engine.chybyVKole >= 2) Engine.ukazNapovedu(false);
         Engine.dom.nap.classList.toggle('vidi', Engine.chybyVKole >= 2 && !!Engine._napoveda);
       },
@@ -224,6 +243,9 @@
             if (v === spravna) {
               b.classList.add('spravne');
               RC.FX.jiskry(b, 12);
+              /* Dítě odpovědělo – rozečtené zadání už nepotřebuje slyšet.
+                 Uvolníme frontu, aby výsledek zazněl hned (a celý). */
+              RC.Voice.ticho();
               opts.pred && opts.pred(v, b);
               Engine.api.hotovo(opts);
             } else {
