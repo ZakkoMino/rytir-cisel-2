@@ -9,55 +9,73 @@ s ním — od počítání do deseti až po malou násobilku.
 
 ## Kde to stojí dnes
 
-10 zastávek, 53 kol. Pět zastávek má úlohy natvrdo (kovárna, vejce, lektvary,
-poklad, souboj), takže druhý průchod je u nich stejný. Postup se ukládá jen
-jako „hotovo / nehotovo“ — nikde se neměří, co dítě umí a kde tápe.
+**Aktualizováno 10. 9. 2026:** oblast *Blokátory* je hotová a svět „do 20“ má
+dvě nové zastávky (Skalní police — bez přechodu, Desítkový schod — přechod na
+dva kroky). Hra má **dva světy a 12 zastávek**, úlohy se losují z generátorů,
+postup drží profily se statistikou a mapa se počítá z počtu zastávek.
+Podrobně u jednotlivých bodů níž.
 
-## 1. Tvrdé blokátory (bez nich nejde přidat 11. zastávku)
+Co ještě chybí: adaptivní obtížnost (statistika se sbírá, ale nikdo z ní
+nečerpá), denní procvičování, sbírání a světy do 100 a malé násobilky.
 
-| Co | Proč to blokuje | Velikost |
-|---|---|---|
-| `js/story.js` — `BODY` = 10 pevných souřadnic mapy, `BODY[idx]` bez kontroly | **11. zastávka mapu shodí** (`b[0]` na `undefined`) | S |
-| `css/main.css` — `.mapa-cesta { width: max(100%, 46rem) }`, popisky aktů na pevných `left` | 20+ uzlů se slepí na sebe | S |
-| `js/core.js` — `odemcena(index)` je lineární přes celý `RC.levels` | nejde vybrat svět podle věku dítěte | M |
-| `js/main.js` — `POSLEDNI_AKT1 = 'brana'`, `BOSS = 'souboj'` | mezihry a finále přišpendlené ke konkrétním id | S |
-| `js/core.js` — jediný klíč `postup-v1`, plochý seznam `hotovo[]`, `hvezdy` navíc | jeden profil, žádná statistika, žádná migrace | M |
-| pevné banky úloh v `vytvor` | `kola` nejde zvýšit, opakování je identické | M |
-| `js/engine.js` — `okoliVoleb` dává rozptyly ±1 | do 20 stačí, pro stovky a násobilku ne | S |
+## 1. Tvrdé blokátory — ✅ hotovo
 
-## 2. Datový model světů
+| Co bylo | Jak je to teď |
+|---|---|
+| `BODY` = 10 pevných souřadnic mapy, 11. zastávka mapu shodila | `bodMapy(i, n)` v `js/story.js` počítá souřadnice ze počtu uzlů (had, poslední nejvýš) |
+| pevná šířka `.mapa-cesta` | šířka se nastavuje inline z počtu zastávek |
+| `odemcena(index)` lineárně přes celý `RC.levels` | `odemcena(uroven)` řeší pořadí **uvnitř světa**, svět otevírá `svetOdemcen()` |
+| `POSLEDNI_AKT1`, `BOSS` pevně v `main.js` | komiksy a boss jsou v datech světa (`komiksPo`, `posledni`, `u.boss`) |
+| jediný profil, plochý `hotovo[]`, `hvezdy` navíc | postup v2: profily, statistika po zastávkách, `hvezdy()` se dopočítá, migrace z `postup-v1` |
+| pevné banky úloh, `kola` svázané s délkou pole | generátory + `RC.bag`; `kola` se dá zvednout bez sahání do dat |
+| rozptyly voleb jen ±1 | `okoliVoleb` nabízí i typické chyby: o desítku vedle, prohozené číslice, ±2 |
+
+Zbylo z téhle oblasti: **adaptivní obtížnost** (statistika je, pravidlo „dvě
+správně bez nápovědy → nahoru“ ještě ne) a **anti-hádání** (po druhé chybě
+odebrat jednu špatnou volbu).
+
+## 2. Datový model světů — ✅ hotovo
 
 ```js
+// js/core.js
 RC.svety = [
-  { id: 'do10',      nazev: 'Cesta do deseti',    vek: 'po 1. třídě' },
-  { id: 'do20',      nazev: 'Dračí hora',         vek: '1.–2. třída' },
-  { id: 'do100',     nazev: 'Království',         vek: '2. třída' },
-  { id: 'nasobilka', nazev: 'Šupinářova tabulka', vek: '2.–3. třída' }
+  { id: 'do10', nazev: 'Cesta do deseti', kratce: 'do 10', vek: 'po první třídě',
+    kulisa: '',     komiksPo: 'MEZIHRA' },
+  { id: 'do20', nazev: 'Dračí hora',      kratce: 'do 20', vek: '1.–2. třída',
+    kulisa: 'hora', komiksPo: 'KONEC', posledni: true }
 ];
-// úroveň dostane  svet: 'do10'  (dnes  akt: 1)
+// zastávka nese  svet: 'do10'
 ```
 
-Čtyři návazné změny:
+Přidat svět = řádek sem + zastávky s jeho `svet`. Mapa, přepínač světů,
+odemykání i příběhové přechody se dopočítají. Nový svět tedy znamená
+**napsat jen minihry**, nic jiného.
 
-1. **Mapa po jednom světě** — 10 uzlů na obrazovku, přesně to, co dnes funguje;
-   mezi světy se přepíná. Souřadnice generovat vzorcem (serpentina) z počtu
-   uzlů, šířku stezky taky. Nikdy neindexovat pevné pole.
-2. **Odemykání po světech** — uvnitř světa lineárně jako dnes, svět se otevře
-   dokončením předchozího **nebo** volbou rodiče („kde chceš začít“). Věk brát
-   jako doporučení, ne jako zámek — sedmiletých s velmi různou úrovní je plno.
-3. **Mezihry a bossové do dat světa** (`svet.uvodniKomiks`, `u.boss`), ne do
-   `main.js`. Texty o „deseti hvězdách“ počítat z `RC.levels.length`.
-4. **Postup v2** — `schemaVersion`, profily (`postup-v1` zmigrovat), a k tomu
-   statistika po zastávkách: pokusy, chyby, nápovědy, kdy naposledy. Bez těch
-   dat nejde udělat ani adaptivita, ani přehled pro rodiče.
+Postup v `localStorage` (klíč `rytir-cisel-2/postup-v2`):
+
+```js
+{ schemaVersion: 2, aktivniProfil: 'p1', zvuk, hlas, odemcenoVse,
+  profily: { p1: { jmeno, hrdina, hotovo: [], videlUvod, videlKomiks: {},
+                   startSvet,
+                   staty: { kovarna: { dokonceno, kola, chyby, napovedy, naposledy } } } } }
+```
 
 ## 3. Obsah nových světů
 
-### Svět „do 20“ — dotáhnout, co chybí
+### Svět „do 20“ — ✅ rozšířený
 
-Zdvojení a blízké zdvojení (7+7, 7+8 — největší pákový efekt a dnes v hře
-není vůbec), doplňování (`7 + ? = 15`), odčítání jako **rozdíl** („o kolik
-víc“), rozklad dvaceti na Mostě.
+Přidané zastávky:
+
+- **Skalní police** — 10–20 *bez* přechodu (13 + 4, 18 − 5). Otep deseti je
+  svázaná a nehýbe se, klepat jde jen do volných kaštanů, a volných se vejde
+  nejvýš devět. Celé sdělení zastávky: *desítka se nemění, počítám jednotky.*
+- **Desítkový schod** — přechod *přes* desítku na dva kroky, obě operace
+  (7 + 8, 14 − 6). Dítě samo rozdělí druhé číslo (8 = 3 a 5) a pás se
+  rozdělí na dvě barvy. Lektvary a Poklad přechod ukazují, tady ho dítě dělá.
+
+Co ve světě „do 20“ ještě chybí: **zdvojení a blízké zdvojení** (7+7, 7+8 —
+velký pákový efekt), **doplňování** (`7 + ? = 15`) mimo bosse a odčítání jako
+**rozdíl** („o kolik víc“).
 
 ### Svět „do 100“ — svazky desítek, stovková tabulka, otevřená osa
 
@@ -133,19 +151,24 @@ diagnostika pro rodiče, ne trest pro dítě.
 
 ## 6. Doporučené pořadí
 
-1. **S** — mapa generovaná z počtu uzlů (odemkne všechno ostatní).
-2. **S** — datový model světů, odemykání po světech, pevná id ven z `main.js`.
-3. **S** — testovací základ (viz výše).
-4. **S/M** — postup v2: profily, statistika, migrace `postup-v1`; zabránit
-   proklikání voleb.
-5. **M** — generátory úloh ve stávajících deseti zastávkách → nekonečné
-   procvičování bez nového obsahu.
-6. **M** — cíle ve výtahu, odstupňované nápovědy, štítky u lektvarů, model
-   u pokladu, přístupnost.
-7. **L** — svět do 100.
-8. **L** — svět malé násobilky.
-9. **M** — adaptivita a Dračí rozcvička (až nad statistikou).
-10. **M** — přehled pro rodiče, sbírání.
+Hotovo (10. 9. 2026): mapa z počtu uzlů, datový model světů, odemykání po
+světech, příběh v datech, postup v2 s profily a statistikou, generátory úloh,
+lepší rozptyly voleb, dvě nové zastávky ve světě „do 20“.
 
-Body 1–3 jsou vstupenka ke všemu dalšímu; do té doby se nemá cenu pouštět do
-nového obsahu.
+Dál:
+
+1. **S** — testovací základ: unikátní id, rozsahy generátorů, počet uzlů mapy,
+   migrace postupu, proklikání každé zastávky do konce (harness existuje,
+   patří do repa).
+2. **S** — anti-hádání (po druhé chybě odebrat jednu špatnou volbu).
+3. **M** — adaptivní obtížnost ze statistiky, která se už sbírá.
+4. **M** — cíle ve výtahu, odstupňované nápovědy, štítky u lektvarů, model
+   u pokladu, přístupnost (zoom, live region).
+5. **M** — Dračí rozcvička: denní mix ze zvládnutých zastávek.
+6. **L** — svět **do 100** (sklad desítek → stovková tabulka → osa po
+   desítkách → přechod → mince).
+7. **L** — svět **malé násobilky** (pole a komutativita otočením → skoky po
+   ose → strategie → dělení).
+8. **S/M** — sbírání a rozšířený přehled pro rodiče.
+
+Nový svět už nic neblokuje — stačí `RC.svety` a minihry.

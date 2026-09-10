@@ -1,19 +1,121 @@
-/* Rytíř Čísel – AKT II: Dračí hora
- *  6. Dračí vejce   – desítka a jednotky, čísla 11–20
- *  7. Hradní výtah  – sčítání a odčítání na ose do 20
- *  8. Lektvary      – sčítání s přechodem přes desítku
- *  9. Dračí poklad  – odčítání s přechodem přes desítku
- * 10. Souboj s drakem – všechno dohromady do 20
+/* Rytíř Čísel – SVĚT „do 20“: Dračí hora
+ *  Dračí vejce      – desítka a jednotky, čísla 11–20
+ *  Skalní police    – 10–20 BEZ přechodu (13 + 4): desítka se nehýbe
+ *  Hradní výtah     – sčítání a odčítání na ose do 20
+ *  Lektvary         – sčítání s přechodem přes desítku (vidí se přetečení)
+ *  Dračí poklad     – odčítání s přechodem přes desítku
+ *  Desítkový schod  – přechod přes desítku na dva kroky, obě operace (7+8, 14−6)
+ *  Souboj s drakem  – všechno dohromady do 20
+ *
+ * Úlohy se losují z generátorů (RC.bag = bez opakování), takže `kola` se dá
+ * zvednout, aniž by se sahalo do dat, a druhé hraní není znak po znaku stejné.
  */
 (function () {
   'use strict';
   var RC = window.RC;
 
+  /* ---------- generátory úloh ---------- */
+
+  /* Sčítání s přechodem přes desítku: 8 + 5, 7 + 6… */
+  function paryScitani() {
+    var out = [];
+    for (var a = 5; a <= 9; a++) {
+      for (var b = 3; b <= 9; b++) if (a + b >= 12 && a + b <= 18) out.push([a, b]);
+    }
+    return out;
+  }
+  /* Odčítání s přechodem: 13 − 5 (jednotek je málo, musí se sáhnout do desítky). */
+  function paryOdcitani() {
+    var out = [];
+    for (var c = 12; c <= 19; c++) {
+      for (var d = 3; d <= 9; d++) {
+        var z = c - d;
+        if (z >= 2 && z <= 9 && d > c - 10) out.push([c, d]);
+      }
+    }
+    return out;
+  }
+  /* Bez přechodu, 10–20: jednotky si vystačí samy (13 + 4, 18 − 5). */
+  function ulohyBezPrechodu() {
+    var out = [];
+    for (var s = 11; s <= 19; s++) {
+      var j = s - 10;
+      for (var k = 2; k <= 8; k++) {
+        if (j + k <= 9) out.push([s, '+', k]);
+        if (j - k >= 1) out.push([s, '−', k]);
+      }
+    }
+    return out;
+  }
+  /* Boss míchá všechno, co se ve světě naučilo – pořadí druhů drží stejné
+     (od nejlehčího), ale čísla se losují, ať souboj není naučený nazpaměť. */
+  var BOSS_DRUHY = ['plusBez', 'plusPres', 'minusBez', 'minusPres', 'doplneni'];
+
+  function bossUloha(druh) {
+    var a, b, vysl, u;
+
+    if (druh === 'plusBez') {                       // 12 + 5
+      a = RC.rand(11, 16); b = RC.rand(2, 9 - (a - 10)); vysl = a + b;
+      return {
+        text: a + ' + ' + b, q: 'Kolik je <b>' + a + ' + ' + b + '</b>?',
+        mluv: 'Kolik je ' + a + ' plus ' + b + '?', vysl: vysl, min: 10, max: 20,
+        vetaVysledku: a + ' plus ' + b + ' je ' + vysl + '!',
+        nap: a + ' je 10 a ' + (a - 10) + '. Desítka se nehýbe, přidávej k jednotkám.'
+      };
+    }
+    if (druh === 'plusPres') {                      // 8 + 7
+      u = RC.pick(paryScitani()); a = u[0]; b = u[1]; vysl = a + b;
+      return {
+        text: a + ' + ' + b, q: 'Kolik je <b>' + a + ' + ' + b + '</b>?',
+        mluv: 'Kolik je ' + a + ' plus ' + b + '?', vysl: vysl, min: 10, max: 20,
+        vetaVysledku: a + ' plus ' + b + ' je ' + vysl + '!',
+        nap: 'Do desítky chybí ' + (10 - a) + '. Přidej je, jsi na deseti – a zbývá ' + (vysl - 10) + '.'
+      };
+    }
+    if (druh === 'minusBez') {                      // 18 − 5
+      a = RC.rand(13, 19); b = RC.rand(2, a - 10); vysl = a - b;
+      return {
+        text: a + ' − ' + b, q: 'Kolik je <b>' + a + ' − ' + b + '</b>?',
+        mluv: 'Kolik je ' + a + ' mínus ' + b + '?', vysl: vysl, min: 9, max: 20,
+        vetaVysledku: a + ' mínus ' + b + ' je ' + vysl + '!',
+        nap: a + ' je 10 a ' + (a - 10) + '. Uber jen z jednotek, desítka zůstává.'
+      };
+    }
+    if (druh === 'minusPres') {                     // 15 − 8
+      u = RC.pick(paryOdcitani()); a = u[0]; b = u[1]; vysl = a - b;
+      return {
+        text: a + ' − ' + b, q: 'Kolik je <b>' + a + ' − ' + b + '</b>?',
+        mluv: 'Kolik je ' + a + ' mínus ' + b + '?', vysl: vysl, min: 2, max: 15,
+        vetaVysledku: a + ' mínus ' + b + ' je ' + vysl + '!',
+        nap: 'Nejdřív uber ' + (a - 10) + ' – jsi na desítce. Pak uber ještě ' + (b - (a - 10)) + '.'
+      };
+    }
+    /* doplneni: 9 + ? = 16 */
+    a = RC.rand(6, 9);
+    vysl = RC.rand(3, 9);                            // hledané číslo
+    var cil = a + vysl;
+    if (cil <= 10) { vysl += 3; cil = a + vysl; }     // ať se doopravdy přechází přes desítku
+    return {
+      text: a + ' + ? = ' + cil, q: '<b>' + a + '</b> a kolik je <b>' + cil + '</b>?',
+      mluv: a + ' a kolik je ' + cil + '?', vysl: vysl, min: 2, max: 14,
+      vetaVysledku: a + ' a ' + vysl + ' je ' + cil + '!',
+      nap: 'Z ' + a + ' do desítky chybí ' + (10 - a) + '. A z desítky do ' + cil +
+           ' ještě ' + (cil - 10) + '.'
+    };
+  }
+
+  /* Losovátko drží zastávka v RC._pytle, ať se pořadí nemíchá v každém kole. */
+  function pytel(jmeno, kolo, polozky) {
+    RC._pytle = RC._pytle || {};
+    if (kolo === 0 || !RC._pytle[jmeno]) RC._pytle[jmeno] = RC.bag(polozky);
+    return RC._pytle[jmeno]();
+  }
+
   /* ---------- 6. DRAČÍ VEJCE ---------- */
 
   RC.levels.push({
     id: 'vejce',
-    akt: 2,
+    svet: 'do20',
     nazev: 'Dračí vejce',
     ikona: '🥚',
     popis: 'Desítka a k tomu jednotky.',
@@ -21,9 +123,8 @@
     odmena: 'Čísla nad deset už čteš na první pohled. Deset a k tomu jednotky!',
     kola: 5,
     vytvor: function (api, i) {
-      var cisla = [12, 15, 17, 11, 20];
-      var n = cisla[i];
-      var cti = i % 2 === 0;                    // 0,2,4 = přečti; 1,3 = naskládej
+      var n = pytel('vejce', i, RC.range(11, 20));
+      var cti = i % 2 === 0;                    // sudá kola přečti, lichá naskládej
       var prvni = Math.min(n, 10);
       var druhe = n - prvni;
 
@@ -89,11 +190,112 @@
     }
   });
 
+  /* ---------- SKALNÍ POLICE (10–20 bez přechodu) ----------
+   * Celý smysl zastávky: desítka se nehýbe, počítají se jen jednotky.
+   * Proto je otep deseti kaštanů zamčená a klikat jde výhradně do volných —
+   * a volných se schválně vejde jen devět, desátý už by byl nová otep.
+   */
+
+  RC.levels.push({
+    id: 'police',
+    svet: 'do20',
+    nazev: 'Skalní police',
+    ikona: '🪨',
+    popis: 'Desítka se nehýbe, počítej jednotky.',
+    uvod: 'Drak si na skalní police schovává kaštany. Deset jich má svázaných v otepi a ta se nehýbe. ' +
+          'Přidávat a ubírat budeš jen ty volné.',
+    odmena: 'Police jsou spočítané. Nad deseti počítáš jednotky a desítka zůstává!',
+    kola: 6,
+    vytvor: function (api, i) {
+      var u = pytel('police', i, ulohyBezPrechodu());
+      var start = u[0], znak = u[1], kolik = u[2];
+      var cil = znak === '+' ? start + kolik : start - kolik;
+      var volnychStart = start - 10;
+      var volnychCil = cil - 10;
+
+      api.zadani('Na polici je <b>' + start + '</b> kaštanů. ' +
+                 (znak === '+' ? 'Přidej <b>' + kolik + '</b>.' : 'Uber <b>' + kolik + '</b>.') +
+                 ' Kolik jich bude?',
+                 'Na polici je ' + start + ' kaštanů. ' +
+                 (znak === '+' ? 'Přidej ' + kolik + '.' : 'Uber ' + kolik + '.') +
+                 ' Naskládej to na police.');
+      api.napoveda('Otep deseti se nehýbe. Počítej jen volné kaštany: bylo jich ' + volnychStart +
+                   (znak === '+' ? ' a přidáváš ' : ' a ubíráš ') + kolik +
+                   '. Deset a k tomu tolik, kolik ti vyjde.');
+
+      var scena = RC.el('div', 'police-scena');
+
+      /* horní police – svázaná desítka, ta je jen na koukání */
+      var horni = RC.el('div', 'police-radek');
+      var otep = RC.Vis.desitkovyRamec(10, 10, { znak: '🌰', cls: 'otep plny' });
+      horni.appendChild(otep);
+      horni.appendChild(RC.el('div', 'police-titulek', 'svázaná otep · <b>10</b>'));
+      scena.appendChild(horni);
+
+      /* dolní police – volné kaštany, sem se klepe */
+      var dolni = RC.el('div', 'police-radek');
+      var volne = RC.Vis.desitkovyRamec(volnychStart, 9, { znak: '🌰', cls: 'volne' });
+      dolni.appendChild(volne);
+      var stitekVolne = RC.el('div', 'police-titulek', '');
+      dolni.appendChild(stitekVolne);
+      scena.appendChild(dolni);
+      api.telo.appendChild(scena);
+
+      var priklad = RC.el('div', 'priklad',
+        '<b>' + start + '</b> ' + znak + ' <b>' + kolik + '</b> = ?');
+      api.telo.appendChild(priklad);
+      /* Kolik je na polici právě teď – zvlášť, ať v příkladu nikdy nesvítí
+         nepravda typu „17 − 3 = 17“. */
+      var citac = RC.el('div', 'pocitadlo', '');
+      api.telo.appendChild(citac);
+
+      var pocet = volnychStart;
+      function nastav(k) {
+        pocet = Math.max(0, Math.min(9, k));
+        for (var j = 0; j < 9; j++) {
+          volne.children[j].classList.toggle('plne', j < pocet);
+          volne.children[j].textContent = j < pocet ? '🌰' : '';
+        }
+        stitekVolne.innerHTML = 'volné kaštany · <b>' + pocet + '</b>';
+        citac.textContent = 'na polici: ' + (10 + pocet);
+        if (pocet === volnychCil) {
+          priklad.innerHTML = '<b>' + start + '</b> ' + znak + ' <b>' + kolik +
+                              '</b> = <b class="miz">' + cil + '</b>';
+        }
+
+        if (pocet === volnychCil) {
+          api.rekni(start + (znak === '+' ? ' plus ' : ' mínus ') + kolik + ' je ' + cil +
+                    '. Otep se ani nehnula.', { prerus: true });
+          api.hotovo({ pauza: 900 });
+        }
+      }
+      nastav(volnychStart);
+
+      Array.prototype.forEach.call(volne.children, function (pole, pi) {
+        pole.addEventListener('click', function () {
+          if (RC.Engine.zamek) return;
+          api.pocitaciTon(10 + Math.min(pi + 1, 9));
+          nastav(pocet === pi + 1 ? pi : pi + 1);
+        });
+      });
+
+      /* Otep je zamčená – klepnutí do ní je typický pokus, tak ať to něco řekne. */
+      Array.prototype.forEach.call(otep.children, function (pole) {
+        pole.addEventListener('click', function () {
+          if (RC.Engine.zamek) return;
+          RC.FX.zatres(otep);
+          api.rekni('Otep je svázaná, deset se nemění. Počítej ve spodní polici.',
+                    { prerus: true });
+        });
+      });
+    }
+  });
+
   /* ---------- 7. HRADNÍ VÝTAH ---------- */
 
   RC.levels.push({
     id: 'vytah',
-    akt: 2,
+    svet: 'do20',
     nazev: 'Hradní výtah',
     ikona: '🛗',
     popis: 'Najdi správné patro.',
@@ -178,7 +380,7 @@
 
   RC.levels.push({
     id: 'lektvary',
-    akt: 2,
+    svet: 'do20',
     nazev: 'Lektvary',
     ikona: '⚗️',
     popis: 'Přelij desítku a spočítej.',
@@ -186,8 +388,8 @@
     odmena: 'Lektvar odvahy je hotový. Přes desítku už přeteče, ale ty počítáš dál!',
     kola: 5,
     vytvor: function (api, i) {
-      var ulohy = [[8, 5], [7, 6], [9, 4], [6, 8], [8, 7]];
-      var a = ulohy[i][0], b = ulohy[i][1];
+      var u = pytel('lektvary', i, paryScitani());
+      var a = u[0], b = u[1];
       var soucet = a + b;
 
       api.zadani('<b>' + a + ' + ' + b + ' = ?</b> Přilévej kapky a dívej se.',
@@ -261,7 +463,7 @@
 
   RC.levels.push({
     id: 'poklad',
-    akt: 2,
+    svet: 'do20',
     nazev: 'Dračí poklad',
     ikona: '💰',
     popis: 'Uber mince přes desítku.',
@@ -269,8 +471,8 @@
     odmena: 'Mýtné zaplaceno. Umíš ubírat i přes desítku!',
     kola: 5,
     vytvor: function (api, i) {
-      var ulohy = [[13, 5], [15, 7], [12, 4], [17, 9], [14, 6]];
-      var celkem = ulohy[i][0], uber = ulohy[i][1];
+      var u = pytel('poklad', i, paryOdcitani());
+      var celkem = u[0], uber = u[1];
       var zbytek = celkem - uber;
 
       api.zadani('V truhle je <b>' + celkem + '</b> mincí. Drak chce <b>' + uber +
@@ -327,11 +529,129 @@
     }
   });
 
+  /* ---------- DESÍTKOVÝ SCHOD (přechod přes desítku na dva kroky) ----------
+   * Lektvary a Poklad přechod ukazují (dítě přilévá a ubírá a vidí to).
+   * Tady ho dítě musí samo rozdělit: 8 = 3 a 5, protože do desítky chybí 3.
+   * Proto kolo běží na dva kroky – nejdřív rozdělení, teprve pak výsledek.
+   */
+
+  RC.levels.push({
+    id: 'schod',
+    svet: 'do20',
+    nazev: 'Desítkový schod',
+    ikona: '🪜',
+    popis: 'Přes desítku na dva kroky.',
+    uvod: 'Přes desítku se chodí po schodu. Nejdřív dojdi přesně na deset, a co zbyde, přidáš potom. ' +
+          'Zpátky to funguje stejně.',
+    odmena: 'Přes desítku umíš na dva kroky. Tenhle trik ti zůstane nadosmrti!',
+    kola: 6,
+    vytvor: function (api, i) {
+      var scitani = i % 2 === 0;
+      var a, b, prvni, druhy, vysl;
+
+      if (scitani) {
+        var us = pytel('schodPlus', i, paryScitani());
+        a = us[0]; b = us[1];
+        prvni = 10 - a;            // kolik chybí do desítky
+        druhy = b - prvni;         // co zbude na druhý krok
+        vysl = a + b;
+      } else {
+        var uo = pytel('schodMinus', i, paryOdcitani());
+        a = uo[0]; b = uo[1];
+        prvni = a - 10;            // jednotky, kterými se vrátíme na desítku
+        druhy = b - prvni;
+        vysl = a - b;
+      }
+
+      var scena = RC.el('div', 'schod-scena');
+
+      var ramce = RC.el('div', 'ramce-radek');
+      var rA = RC.Vis.desitkovyRamec(scitani ? a : 10, 10);
+      var rB = RC.Vis.desitkovyRamec(scitani ? 0 : prvni, 10);
+      var boxA = RC.el('div', 'schod-ramec');
+      var boxB = RC.el('div', 'schod-ramec');
+      boxA.appendChild(rA); boxA.appendChild(RC.el('div', 'police-titulek', 'desítka'));
+      boxB.appendChild(rB); boxB.appendChild(RC.el('div', 'police-titulek', 'jednotky'));
+      ramce.appendChild(boxA); ramce.appendChild(boxB);
+      scena.appendChild(ramce);
+
+      var priklad = RC.el('div', 'priklad',
+        '<b>' + a + '</b> ' + (scitani ? '+' : '−') + ' <b>' + b + '</b> = ?');
+      scena.appendChild(priklad);
+
+      /* Pás ukazuje druhé číslo jako kostičky – ty se pak rozdělí na dvě části. */
+      var pas = RC.el('div', 'schod-pas');
+      for (var k = 0; k < b; k++) pas.appendChild(RC.el('i'));
+      scena.appendChild(pas);
+      scena.appendChild(RC.el('div', 'police-titulek',
+        scitani ? 'tolik přidáváš' : 'tolik ubíráš'));
+      api.telo.appendChild(scena);
+
+      /* ---- krok 1: rozdělit druhé číslo ---- */
+      api.zadani(scitani
+        ? 'Nejdřív dojdi na desítku. Kolik z <b>' + b + '</b> tam dáš?'
+        : 'Nejdřív se vrať na desítku. Kolik z <b>' + b + '</b> ubereš?');
+      api.napoveda(scitani
+        ? 'V desítce je ' + a + ' a chybí do deseti. Kolik políček je ještě prázdných?'
+        : 'Volných jednotek je ' + prvni + '. Uber přesně ty, ať jsi na desítce.');
+
+      var krok1 = api.volbyKrok(prvni, api.okoliVoleb(prvni, 3, 1, 9), function () {
+        api.rekni(scitani
+          ? 'Do desítky chybí ' + prvni + '. Zbývá ' + druhy + '.'
+          : 'Ubereš ' + prvni + ' a jsi na desítce. Zbývá ubrat ' + druhy + '.');
+        rozdelPas();
+        setTimeout(function () { krok1.remove(); krok2(); }, 420);
+      }, { cls: 'male' });
+      api.telo.appendChild(krok1);
+
+      function rozdelPas() {
+        Array.prototype.forEach.call(pas.children, function (kus, idx) {
+          kus.classList.add(idx < prvni ? 'doDesitky' : 'zbytek');
+        });
+        if (scitani) {
+          for (var j = 0; j < 10; j++) rA.children[j].classList.add('plne');
+          rA.classList.add('plny');
+        } else {
+          for (var m = 0; m < 10; m++) rB.children[m].classList.remove('plne');
+        }
+        priklad.innerHTML = '<b>' + a + '</b> ' + (scitani ? '+' : '−') +
+          ' (<b>' + prvni + '</b> ' + (scitani ? '+' : '+') + ' <b>' + druhy + '</b>) = ?';
+      }
+
+      /* ---- krok 2: dopočítat výsledek ---- */
+      function krok2() {
+        api.zadani(scitani
+          ? 'Deset a ještě <b>' + druhy + '</b>. Kolik to je?'
+          : 'Na desítce jsi. Zbývá ubrat <b>' + druhy + '</b>. Kolik zůstane?');
+        api.napoveda(scitani
+          ? 'Deset a ' + druhy + ' – to se čte jako jedna desítka a ' + druhy + '.'
+          : 'Z deseti uber ' + druhy + '. Deset bez ' + druhy + '.');
+
+        var min = scitani ? 10 : 2, max = scitani ? 20 : 10;
+        api.telo.appendChild(api.volby(vysl, api.okoliVoleb(vysl, 4, min, max), {
+          pauza: 1100,
+          pred: function () {
+            if (scitani) {
+              for (var j = 0; j < druhy; j++) rB.children[j].classList.add('plne');
+            } else {
+              for (var m = 9; m >= 10 - druhy; m--) rA.children[m].classList.remove('plne');
+              rA.classList.remove('plny');
+            }
+            priklad.innerHTML = '<b>' + a + '</b> ' + (scitani ? '+' : '−') + ' <b>' + b +
+              '</b> = <b class="miz">' + vysl + '</b>';
+            api.rekni(a + (scitani ? ' plus ' : ' mínus ') + b + ' je ' + vysl +
+                      '. Přes desítku na dva kroky.');
+          }
+        }));
+      }
+    }
+  });
+
   /* ---------- 10. SOUBOJ S DRAKEM ---------- */
 
   RC.levels.push({
     id: 'souboj',
-    akt: 2,
+    svet: 'do20',
     nazev: 'Souboj s drakem',
     ikona: '🐉',
     popis: 'Poraz draka v počítání.',
@@ -340,23 +660,7 @@
     kola: 5,
     boss: true,
     vytvor: function (api, i) {
-      var u = [
-        { text: '12 + 5', q: 'Kolik je <b>12 + 5</b>?', mluv: 'Kolik je dvanáct plus pět?',
-          vysl: 17, min: 10, max: 20,
-          nap: '12 je 10 a 2. K dvěma přidej 5, to je 7. A ještě ta desítka.' },
-        { text: '8 + 7', q: 'Kolik je <b>8 + 7</b>?', mluv: 'Kolik je osm plus sedm?',
-          vysl: 15, min: 10, max: 20,
-          nap: 'Do desítky chybí 2. Přidej 2, máš 10, a ještě zbývá 5.' },
-        { text: '18 − 5', q: 'Kolik je <b>18 − 5</b>?', mluv: 'Kolik je osmnáct mínus pět?',
-          vysl: 13, min: 5, max: 20,
-          nap: '18 je 10 a 8. Z osmi uber 5, zbydou 3. A desítka zůstává.' },
-        { text: '15 − 8', q: 'Kolik je <b>15 − 8</b>?', mluv: 'Kolik je patnáct mínus osm?',
-          vysl: 7, min: 2, max: 15,
-          nap: 'Nejdřív uber 5 – zůstane 10. Pak uber ještě 3 z desítky.' },
-        { text: '9 + ? = 16', q: 'Devět a kolik je <b>16</b>?', mluv: 'Devět a kolik je šestnáct?',
-          vysl: 7, min: 2, max: 14,
-          nap: 'Z 9 do 10 chybí 1. A z 10 do 16 ještě 6. Jedna a šest je sedm.' }
-      ][i];
+      var u = bossUloha(BOSS_DRUHY[i % BOSS_DRUHY.length]);
 
       api.zadani(u.q + ' Rozbij drakovi štít!', u.mluv + ' Rozbij drakovi štít!');
       api.napoveda(u.nap);
@@ -393,7 +697,8 @@
 
       var dBox = RC.el('div', 'boj-drak');
       var stity = RC.el('div', 'draci-stity');
-      for (var s = 0; s < 5 - i; s++) stity.appendChild(RC.el('i', null, '🔥'));
+      var kolaBoje = RC.Engine.uroven.kola;
+      for (var s = 0; s < kolaBoje - i; s++) stity.appendChild(RC.el('i', null, '🔥'));
       dBox.appendChild(stity);
       dBox.insertAdjacentHTML('beforeend', RC.Art.drak());
       boj.appendChild(dBox);

@@ -39,59 +39,238 @@
     };
   };
 
+  /* ---------- světy ---------- */
+
+  /* Hra je rozdělená na světy podle toho, co dítě právě umí. Zastávka patří
+     do světa přes `svet: '<id>'`; mapa, odemykání i příběhové přechody se
+     dopočítají odsud, takže přidat svět znamená přidat řádek sem. */
+  RC.svety = [
+    { id: 'do10',      nazev: 'Cesta do deseti', kratce: 'do 10',
+      vek: 'po první třídě',  kulisa: '',     komiksPo: 'MEZIHRA' },
+    { id: 'do20',      nazev: 'Dračí hora',      kratce: 'do 20',
+      vek: '1.–2. třída',     kulisa: 'hora', komiksPo: 'KONEC', posledni: true }
+  ];
+  RC.svet = function (id) {
+    for (var i = 0; i < RC.svety.length; i++) if (RC.svety[i].id === id) return RC.svety[i];
+    return RC.svety[0];
+  };
+  RC.urovneSveta = function (id) {
+    return RC.levels.filter(function (u) { return u.svet === id; });
+  };
+
   /* ---------- stav a postup ---------- */
 
   /* Na github.io mají všechna repa jednoho účtu stejný origin, takže i stejné
      localStorage. Klíč proto obsahuje jméno repa, ať si projekty nepřepisují postup. */
-  var KEY = 'rytir-cisel-2/postup-v1';
+  var KEY = 'rytir-cisel-2/postup-v2';
+  var KEY_V1 = 'rytir-cisel-2/postup-v1';
+
+  function novyProfil(jmeno) {
+    return {
+      jmeno: jmeno || 'Rytíř',
+      hrdina: null,        // 'kvido' | 'bara'
+      hotovo: [],          // id dokončených zastávek
+      staty: {},           // id -> { dokonceno, chyby, napovedy, naposledy }
+      videlUvod: false,
+      videlKomiks: {},     // id světa -> true (mezihra/závěr už běžely)
+      startSvet: null      // svět, který rodič vybral jako začátek
+    };
+  }
+
   var State = (RC.State = {
     data: {
-      hrdina: null,      // 'kvido' | 'bara'
-      hotovo: [],        // id dokončených úrovní
-      hvezdy: 0,
+      schemaVersion: 2,
+      aktivniProfil: 'p1',
+      profily: { p1: novyProfil('Rytíř') },
+      /* nastavení je společné pro celý tablet, ne pro profil */
       zvuk: true,
       hlas: true,
-      videlUvod: false,
-      videlMezihru: false,
-      videlKonec: false
+      odemcenoVse: false   // rodičovský přepínač: hrát cokoli, i nedokončené
     },
+
     load: function () {
       try {
         var raw = localStorage.getItem(KEY);
         if (raw) {
           var saved = JSON.parse(raw);
           for (var k in saved) if (k in this.data) this.data[k] = saved[k];
+        } else {
+          this.migrujV1();
         }
       } catch (e) { /* soukromý režim – hrajeme bez ukládání */ }
+      this.opravData();
       return this;
     },
+
+    /* Postup z první verze (jeden profil, plochý seznam) se přenese do profilu. */
+    migrujV1: function () {
+      try {
+        var raw = localStorage.getItem(KEY_V1);
+        if (!raw) return;
+        var v1 = JSON.parse(raw) || {};
+        var p = novyProfil('Rytíř');
+        p.hrdina = v1.hrdina || null;
+        p.hotovo = Array.isArray(v1.hotovo) ? v1.hotovo.slice() : [];
+        p.videlUvod = !!v1.videlUvod;
+        if (v1.videlMezihru) p.videlKomiks.do10 = true;
+        if (v1.videlKonec) p.videlKomiks.do20 = true;
+        this.data.profily = { p1: p };
+        this.data.aktivniProfil = 'p1';
+        if (typeof v1.zvuk === 'boolean') this.data.zvuk = v1.zvuk;
+        if (typeof v1.hlas === 'boolean') this.data.hlas = v1.hlas;
+        this.save();
+      } catch (e) {}
+    },
+
+    /* Poškozený nebo ručně upravený stav nesmí hru shodit. */
+    opravData: function () {
+      var d = this.data;
+      if (!d.profily || typeof d.profily !== 'object') d.profily = {};
+      var ids = Object.keys(d.profily);
+      if (!ids.length) { d.profily = { p1: novyProfil('Rytíř') }; ids = ['p1']; }
+      ids.forEach(function (id) {
+        var vzor = novyProfil();
+        var p = d.profily[id] || {};
+        for (var k in vzor) if (!(k in p)) p[k] = vzor[k];
+        if (!Array.isArray(p.hotovo)) p.hotovo = [];
+        if (!p.staty || typeof p.staty !== 'object') p.staty = {};
+        if (!p.videlKomiks || typeof p.videlKomiks !== 'object') p.videlKomiks = {};
+        d.profily[id] = p;
+      });
+      if (!d.profily[d.aktivniProfil]) d.aktivniProfil = ids[0];
+      return this;
+    },
+
     save: function () {
       try { localStorage.setItem(KEY, JSON.stringify(this.data)); } catch (e) {}
     },
-    hotova: function (id) { return this.data.hotovo.indexOf(id) >= 0; },
+
+    /* ---- profily ---- */
+
+    profil: function () { return this.data.profily[this.data.aktivniProfil]; },
+    profily: function () {
+      var d = this.data;
+      return Object.keys(d.profily).map(function (id) {
+        return { id: id, jmeno: d.profily[id].jmeno, hvezdy: d.profily[id].hotovo.length };
+      });
+    },
+    pridejProfil: function (jmeno) {
+      var id = 'p' + (Date.now().toString(36));
+      this.data.profily[id] = novyProfil(jmeno);
+      this.data.aktivniProfil = id;
+      this.save();
+      return id;
+    },
+    prepniProfil: function (id) {
+      if (this.data.profily[id]) { this.data.aktivniProfil = id; this.save(); }
+    },
+    smazProfil: function (id) {
+      if (Object.keys(this.data.profily).length < 2) return false;
+      delete this.data.profily[id];
+      if (this.data.aktivniProfil === id) this.data.aktivniProfil = Object.keys(this.data.profily)[0];
+      this.save();
+      return true;
+    },
+    prejmenujProfil: function (id, jmeno) {
+      if (this.data.profily[id]) { this.data.profily[id].jmeno = jmeno; this.save(); }
+    },
+
+    /* ---- postup ---- */
+
+    hotova: function (id) { return this.profil().hotovo.indexOf(id) >= 0; },
+    /* Hvězdy se nikde neukládají, počítají se z hotových zastávek. */
+    hvezdy: function () { return this.profil().hotovo.length; },
+
     dokonci: function (id) {
-      if (!this.hotova(id)) {
-        this.data.hotovo.push(id);
-        this.data.hvezdy++;
-      }
+      var p = this.profil();
+      if (p.hotovo.indexOf(id) < 0) p.hotovo.push(id);
+      var st = this.stat(id);
+      st.dokonceno = (st.dokonceno || 0) + 1;
+      st.naposledy = Date.now();
       this.save();
     },
-    /* Odemčená je první nehotová úroveň a všechny hotové. */
-    odemcena: function (index) {
-      for (var i = 0; i < index; i++) {
-        if (!this.hotova(RC.levels[i].id)) return false;
+
+    /* ---- statistika (podklad pro adaptivitu a přehled pro rodiče) ---- */
+
+    stat: function (id) {
+      var p = this.profil();
+      if (!p.staty[id]) p.staty[id] = { dokonceno: 0, chyby: 0, napovedy: 0, kola: 0, naposledy: 0 };
+      return p.staty[id];
+    },
+    zaznam: function (id, co, kolik) {
+      if (!id) return;
+      var st = this.stat(id);
+      st[co] = (st[co] || 0) + (kolik == null ? 1 : kolik);
+      st.naposledy = Date.now();
+      this.save();
+    },
+
+    /* ---- odemykání ---- */
+
+    /* Svět je otevřený, když je hotový ten předchozí, když si ho rodič vybral
+       jako start, nebo když je v nastavení odemčeno všechno. */
+    svetOdemcen: function (svetId) {
+      if (this.data.odemcenoVse) return true;
+      var p = this.profil();
+      if (p.startSvet === svetId) return true;
+      for (var i = 0; i < RC.svety.length; i++) {
+        var s = RC.svety[i];
+        if (s.id === svetId) return i === 0 || this.svetDokoncen(RC.svety[i - 1].id);
+      }
+      return false;
+    },
+    svetDokoncen: function (svetId) {
+      var urovne = RC.urovneSveta(svetId);
+      if (!urovne.length) return false;
+      for (var i = 0; i < urovne.length; i++) if (!this.hotova(urovne[i].id)) return false;
+      return true;
+    },
+    prvniOtevrenySvet: function () {
+      for (var i = 0; i < RC.svety.length; i++) {
+        var s = RC.svety[i];
+        if (this.svetOdemcen(s.id) && !this.svetDokoncen(s.id)) return s.id;
+      }
+      /* všechno hotové – ukaž poslední otevřený */
+      for (var j = RC.svety.length - 1; j >= 0; j--) {
+        if (this.svetOdemcen(RC.svety[j].id)) return RC.svety[j].id;
+      }
+      return RC.svety[0].id;
+    },
+    dalsiSvet: function (svetId) {
+      for (var i = 0; i < RC.svety.length - 1; i++) {
+        if (RC.svety[i].id === svetId) return RC.svety[i + 1].id;
+      }
+      return null;
+    },
+
+    /* Odemčená je první nehotová zastávka svého světa a všechny hotové před ní. */
+    odemcena: function (uroven) {
+      if (this.data.odemcenoVse) return true;
+      if (!this.svetOdemcen(uroven.svet)) return false;
+      var urovne = RC.urovneSveta(uroven.svet);
+      for (var i = 0; i < urovne.length; i++) {
+        if (urovne[i].id === uroven.id) return true;
+        if (!this.hotova(urovne[i].id)) return false;
       }
       return true;
     },
+
+    /* ---- příběh ---- */
+
+    videlKomiks: function (svetId) { return !!this.profil().videlKomiks[svetId]; },
+    oznacKomiks: function (svetId) { this.profil().videlKomiks[svetId] = true; this.save(); },
+
     reset: function () {
-      this.data.hotovo = [];
-      this.data.hvezdy = 0;
-      this.data.videlUvod = false;
-      this.data.videlMezihru = false;
-      this.data.videlKonec = false;
+      var p = this.profil();
+      p.hotovo = [];
+      p.staty = {};
+      p.videlUvod = false;
+      p.videlKomiks = {};
+      p.startSvet = null;
       this.save();
     },
-    zena: function () { return this.data.hrdina === 'bara'; },
+
+    zena: function () { return this.profil().hrdina === 'bara'; },
     jmeno: function () { return this.zena() ? 'Bára' : 'Kvído'; }
   }).load();
 

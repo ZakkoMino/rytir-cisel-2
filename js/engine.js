@@ -31,7 +31,7 @@
       Engine.beh++;
 
       var scena = RC.el('div', 'uroven');
-      scena.innerHTML = RC.Art.kulisa(uroven.akt === 2 ? 'hora' : '');
+      scena.innerHTML = RC.Art.kulisa(RC.svet(uroven.svet).kulisa);
 
       var obsah = RC.el('div', 'obsah');
 
@@ -105,6 +105,7 @@
       if (Engine.kolo >= u.kola) return Engine.dokonceno();
 
       Engine.chybyVKole = 0;
+      Engine.napovedaVKole = false;
       Engine.zamek = false;
       Engine._napoveda = null;
       Engine._zadani = '';
@@ -157,6 +158,10 @@
       if (typeof n === 'function') { n(); return; }
       Engine.dom.nap.innerHTML = '<span class="ik">💡</span><span>' + n + '</span>';
       Engine.dom.nap.classList.add('vidi');
+      if (!Engine.napovedaVKole) {
+        Engine.napovedaVKole = true;
+        RC.State.zaznam(Engine.uroven && Engine.uroven.id, 'napovedy');
+      }
       /* O nápovědu i o zadání si říká dítě samo – ta smí skočit do řeči. */
       if (naKliknuti) RC.Voice.rekni(n, { prerus: true });
     },
@@ -197,6 +202,7 @@
         RC.FX.konfety(opts.konfety || 18);
         /* Pochvala se zařadí za výsledek, který úroveň právě říká. */
         RC.Voice.rekni(RC.pick(POCHVALY));
+        RC.State.zaznam(Engine.uroven.id, 'kola');
         Engine.kolo++;
 
         var beh = Engine.beh;
@@ -224,6 +230,7 @@
           setTimeout(function () { prvek.classList.remove('vedle'); }, 700);
         }
         Engine.chybyVKole++;
+        RC.State.zaznam(Engine.uroven && Engine.uroven.id, 'chyby');
         var zprava = text || RC.pick(POVZBUZENI);
         /* Další pokus přebije povzbuzení k tomu předchozímu, ať se nehromadí. */
         RC.Voice.rekni(zprava, { prerus: true });
@@ -232,22 +239,18 @@
       },
 
       /* Řádek velkých tlačítek s čísly. */
-      volby: function (spravna, seznam, opts) {
-        opts = opts || {};
-        var box = RC.el('div', 'volby ' + (opts.cls || ''));
+      _volbyBox: function (spravna, seznam, opts, naSpravnou) {
+        var box = RC.el('div', 'volby ' + ((opts && opts.cls) || ''));
         RC.shuffle(seznam).forEach(function (v) {
           var b = RC.el('button', 'volba', String(v));
           b.type = 'button';
           b.addEventListener('click', function () {
-            if (Engine.zamek) return;
+            if (Engine.zamek || box.classList.contains('odpovezeno')) return;
             if (v === spravna) {
               b.classList.add('spravne');
               RC.FX.jiskry(b, 12);
-              /* Dítě odpovědělo – rozečtené zadání už nepotřebuje slyšet.
-                 Uvolníme frontu, aby výsledek zazněl hned (a celý). */
-              RC.Voice.ticho();
-              opts.pred && opts.pred(v, b);
-              Engine.api.hotovo(opts);
+              box.classList.add('odpovezeno');
+              naSpravnou(v, b);
             } else {
               RC.Audio.sfx('tap');
               Engine.api.chyba(b);
@@ -258,14 +261,49 @@
         return box;
       },
 
-      /* Sada voleb okolo správné odpovědi. */
+      volby: function (spravna, seznam, opts) {
+        opts = opts || {};
+        return Engine.api._volbyBox(spravna, seznam, opts, function (v, b) {
+          /* Dítě odpovědělo – rozečtené zadání už nepotřebuje slyšet.
+             Uvolníme frontu, aby výsledek zazněl hned (a celý). */
+          RC.Voice.ticho();
+          opts.pred && opts.pred(v, b);
+          Engine.api.hotovo(opts);
+        });
+      },
+
+      /* Mezikrok: správná odpověď kolo neuzavře, jen posune dál.
+       * Používá to Desítkový schod, kde se počítá na dva kroky. */
+      volbyKrok: function (spravna, seznam, dalsi, opts) {
+        return Engine.api._volbyBox(spravna, seznam, opts || {}, function (v, b) {
+          RC.Voice.ticho();
+          RC.Audio.sfx('odemk');
+          dalsi(v, b);
+        });
+      },
+
+      /* Sada voleb okolo správné odpovědi.
+       * Rozptyly nejsou jen ±1: nabízíme i typické dětské chyby – o desítku
+       * vedle, prohozené číslice, o dvě mimo. Nad dvacítkou je ±1 málo,
+       * dítě by správnou odpověď poznalo podle toho, že je „uprostřed“. */
       okoliVoleb: function (spravna, pocet, min, max) {
         var out = [spravna];
-        var krok = 1;
-        while (out.length < pocet && krok < 12) {
-          [spravna - krok, spravna + krok].forEach(function (v) {
-            if (out.length < pocet && v >= min && v <= max && out.indexOf(v) < 0) out.push(v);
-          });
+        function zkus(v) {
+          if (out.length < pocet && v >= min && v <= max && out.indexOf(v) < 0) out.push(v);
+        }
+        var jednotky = spravna % 10, desitky = Math.floor(spravna / 10);
+        var typicke = [spravna - 1, spravna + 1];
+        if (spravna >= 10) {
+          typicke.push(spravna - 10, spravna + 10);              // spletená desítka
+          if (jednotky !== desitky) typicke.push(jednotky * 10 + desitky);  // prohozené číslice
+        }
+        typicke.push(spravna - 2, spravna + 2);
+        RC.shuffle(typicke).forEach(zkus);
+
+        /* Kdyby pořád chybělo, dopočítáme po jednom dál od výsledku. */
+        var krok = 3;
+        while (out.length < pocet && krok < 15) {
+          zkus(spravna - krok); zkus(spravna + krok);
           krok++;
         }
         return out.sort(function (a, b) { return a - b; });

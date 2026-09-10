@@ -13,7 +13,7 @@
    sahat. VERZI je potřeba zvednout při každém nasazení, které přidá nebo
    přejmenuje soubor ve skořápce; jinak by ho první offline spuštění nemělo. */
 var PREFIX = 'rytir-cisel-2-';
-var VERZE = '2026-09-10';
+var VERZE = '2026-09-10-svety';
 var CACHE = PREFIX + 'skorapka-' + VERZE;
 
 /* Skořápka hry – tohle musí být k dispozici i offline. */

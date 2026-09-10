@@ -1,31 +1,33 @@
-/* Rytíř Čísel – propojení příběhu a úrovní */
+/* Rytíř Čísel – propojení příběhu a úrovní
+ * Kdy se hraje komiks a co přijde po dokončení zastávky se čte z dat světa
+ * (RC.svety), ne z pevných id zastávek – přidat svět tedy nevyžaduje sáhnout sem.
+ */
 (function () {
   'use strict';
   var RC = window.RC;
 
-  var POSLEDNI_AKT1 = 'brana';
-  var BOSS = 'souboj';
-
   RC.Engine.naMapu = function () { RC.Map.zobraz(); };
 
   RC.Engine.poDokonceni = function (uroven) {
-    /* Konec prvního aktu – mezihra o Dračí hoře. */
-    if (uroven.id === POSLEDNI_AKT1 && !RC.State.data.videlMezihru) {
-      RC.State.data.videlMezihru = true;
-      RC.State.save();
-      RC.Story.komiks(RC.Story.MEZIHRA, 'Na Dračí horu!', function () {
-        RC.Map.zobraz({ rekni: 'Druhá polovina cesty. Teď se počítá do dvaceti.' });
-      });
-      return;
+    var svet = RC.svet(uroven.svet);
+
+    /* Dokončený svět spustí svůj komiks – jednou za profil. */
+    if (RC.State.svetDokoncen(svet.id) && !RC.State.videlKomiks(svet.id)) {
+      RC.State.oznacKomiks(svet.id);
+      var panely = RC.Story[svet.komiksPo];
+      if (panely) {
+        var dalsiId = RC.State.dalsiSvet(svet.id);
+        return RC.Story.komiks(panely, svet.posledni ? 'Hurá!' : 'Jdeme dál!', function () {
+          if (svet.posledni || !dalsiId) return zaverecnaObrazovka();
+          var dalsi = RC.svet(dalsiId);
+          RC.Map.zobraz({
+            svet: dalsiId,
+            rekni: 'Nový svět: ' + dalsi.nazev + '. Teď se počítá ' + dalsi.kratce + '.'
+          });
+        });
+      }
     }
-    /* Souboj vyhrán – závěrečný komiks a diplom. */
-    if (uroven.id === BOSS) {
-      RC.State.data.videlKonec = true;
-      RC.State.save();
-      RC.Story.komiks(RC.Story.KONEC, 'Hurá!', zaverecnaObrazovka);
-      return;
-    }
-    RC.Map.zobraz();
+    RC.Map.zobraz({ svet: svet.id });
   };
 
   function zaverecnaObrazovka() {
@@ -48,10 +50,11 @@
     vystup.appendChild(r); vystup.appendChild(kniha); vystup.appendChild(d);
     obsah.appendChild(vystup);
 
+    var pocet = RC.State.hvezdy();
     var hvezdy = RC.el('div', 'hvezdicky');
     hvezdy.style.fontSize = 'clamp(1.2rem, 4vh, 2.2rem)';
     hvezdy.style.color = 'var(--zlata2)';
-    for (var i = 0; i < RC.levels.length; i++) {
+    for (var i = 0; i < pocet; i++) {
       var h = RC.el('i', null, '★');
       h.style.animationDelay = (i * 0.09).toFixed(2) + 's';
       hvezdy.appendChild(h);
@@ -71,7 +74,8 @@
     scena.appendChild(obsah);
     RC.scena(scena);
     setTimeout(function () {
-      RC.Voice.rekni('Výprava dokončena! Máš všech ' + RC.levels.length + ' hvězd odvahy. ' +
+      RC.Voice.rekni('Výprava dokončena! Máš ' + pocet + ' ' +
+        RC.mn(pocet, 'hvězdu', 'hvězdy', 'hvězd') + ' odvahy. ' +
         (RC.State.zena() ? 'Jsi opravdová rytířka čísel.' : 'Jsi opravdový rytíř čísel.'));
     }, 600);
   }

@@ -1,7 +1,7 @@
 # Rytíř Čísel — Souboj s drakem
 
 Příběhová hra na **počítání do 10 a do 20** pro dítě, které právě dokončilo první třídu
-(≈ 7 let). Pilot / POC ve webové formě, hraje se prstem na tabletu.
+(≈ 7 let). Dvanáct zastávek ve dvou světech, hraje se prstem na tabletu.
 
 Inspirováno českým **Matemágem** — tedy: příběh nese celou hru, dabovaný komiks
 na začátku i na konci, zastávky na mapě a hlavně **za chybu se nic neodečítá**.
@@ -79,9 +79,13 @@ a nikdo ho nikdy počítat nenaučil. Rytíř ho to naučí. Žádné zabíjení
 
 ---
 
-## Zastávky
+## Světy a zastávky
 
-### Akt I — Cesta do deseti
+Obsah je rozdělený na **světy** podle toho, co dítě právě umí. Svět se otevře
+dokončením předchozího — nebo ho rodič otevře v nastavení (*Otevřít všechny
+světy*), když dítě umí víc, než kde je v příběhu.
+
+### Svět „do 10“ — Cesta do deseti *(po první třídě)*
 
 | # | Zastávka | Co se procvičuje | Jak se to hraje |
 |---|----------|------------------|-----------------|
@@ -91,24 +95,21 @@ a nikdo ho nikdy počítat nenaučil. Rytíř ho to naučí. Žádné zabíjení
 | 4 | Kouzelný štít | dvojice do deseti | na štítu svítí 7 nýtů, kolik chybí do 10; vedle je desítkový rámec |
 | 5 | Strážná brána | porovnávání `<` `=` `>` | dvě stráže na váhách, dítě vybere znaménko, váhy se překlopí |
 
-### Akt II — Dračí hora
+### Svět „do 20“ — Dračí hora *(1.–2. třída)*
 
 | # | Zastávka | Co se procvičuje | Jak se to hraje |
 |---|----------|------------------|-----------------|
-| 6 | Dračí vejce | desítka a jednotky, 11–20 | do hnízda se vejde přesně 10 vajec; kola se střídají: *přečti počet* / *naskládej daný počet* |
-| 7 | Hradní výtah | sčítání a odčítání do 20 | 21 pater, „jsi v 7., vyjeď o 6 výš“; každá desítka je označená |
-| 8 | Lektvary | sčítání **s přechodem přes desítku** | do láhve se vejde 10 kapek; dítě přilévá po jedné a vidí, jak první přeteče do druhé |
-| 9 | Dračí poklad | odčítání **s přechodem přes desítku** | plná desítka + volné mince; dítě mince vyndává klepnutím a pak spočítá zbytek |
-| 10 | Souboj s drakem | všechno do 20 | drak má 5 ohnivých štítů, každý správný výpočet jeden rozbije |
+| 1 | Dračí vejce | desítka a jednotky, 11–20 | do hnízda se vejde přesně 10 vajec; kola se střídají: *přečti počet* / *naskládej daný počet* |
+| 2 | Skalní police | 10–20 **bez přechodu** (13 + 4) | otep deseti kaštanů je svázaná a nehýbe se, klepat jde jen do volných — a volných se vejde nejvýš devět |
+| 3 | Hradní výtah | sčítání a odčítání do 20 | 21 pater, „jsi v 7., vyjeď o 6 výš“; každá desítka je označená |
+| 4 | Lektvary | sčítání **s přechodem** — vidět | do láhve se vejde 10 kapek; dítě přilévá po jedné a vidí, jak první přeteče do druhé |
+| 5 | Dračí poklad | odčítání **s přechodem** — vidět | plná desítka + volné mince; dítě mince vyndává klepnutím a pak spočítá zbytek |
+| 6 | Desítkový schod | přechod přes desítku **na dva kroky** (7 + 8, 14 − 6) | dítě samo rozdělí druhé číslo: nejdřív dojde přesně na deset, pak zbytek — a vidí to na pásu, který se rozdělí na dvě barvy |
+| 7 | Souboj s drakem | všechno do 20 | drak má ohnivé štíty, každý správný výpočet jeden rozbije; příklady se losují |
 
-Přechod přes desítku (8. a 9. zastávka) je záměrně postavený **vizuálně** —
-dítě nejdřív uvidí, co se s desítkou děje, a teprve pak odpovídá.
-
-Žádné dvě zastávky se nehrají stejně. Sčítání a odčítání do 10 je schválně
-dvakrát, ale pokaždé jinak: v **kovárně** na věcech, které dítě vidí přibývat
-a ubývat (příběh → příklad), na **číselné stezce** už jen v hlavě po ose.
-
----
+Rozdíl mezi 4/5 a 6 je záměrný: **Lektvary a Poklad přechod ukazují** (dítě
+přilévá a ubírá a vidí, co se s desítkou děje), **Desítkový schod ho po dítěti
+chce** — musí samo říct, že 8 je 3 a 5, protože do desítky chybí 3.
 
 ## Co je v tom pro dítě udělané schválně
 
@@ -130,6 +131,11 @@ a ubývat (příběh → příklad), na **číselné stezce** už jen v hlavě p
 - **Dotyk, ne přesnost.** Všechny cíle jsou velké, nikde není drag & drop
   ani nic, co by vyžadovalo jemnou motoriku nebo myš.
 - **Rytíř / rytířka** — texty se ohýbají v rodě podle výběru.
+- **Víc dětí na jednom tabletu.** Každý profil má svůj postup, svého hrdinu
+  i svoje hvězdy; přepíná se na úvodní obrazovce nebo v nastavení.
+- **Přehled pro rodiče** (⚙️ → *Jak to jde*): u každé zastávky kolik kol,
+  kolik chyb a kolikrát si dítě vzalo nápovědu. Zastávka, kde chybovalo víc
+  než v polovině kol, je červeně — tam se vyplatí zahrát si to spolu.
 
 ---
 
@@ -156,9 +162,10 @@ js/story.js         komiksy, mapa výpravy, nastavení
 js/main.js          propojení příběhu a úrovní
 ```
 
-Přidat zastávku = jeden `RC.levels.push({...})` s `vytvor(api, kolo)`.
-Mapa i odemykání se dopočítají samy — **pozor, jen do deseti zastávek**,
-souřadnice mapy jsou dnes pevné (viz [ROZSIRENI.md](ROZSIRENI.md)).
+Přidat zastávku = jeden `RC.levels.push({...})` s `svet: '<id>'` a
+`vytvor(api, kolo)`. Přidat svět = jeden řádek do `RC.svety` v `js/core.js`.
+Mapa (souřadnice i šířka stezky), odemykání, přepínač světů i příběhové
+přechody se dopočítají z dat — na počtu zastávek nezáleží.
 
 Plán, kam s hrou dál — světy do 10 / 20 / 100 a malá násobilka, co je v cestě
 a v jakém pořadí to dělat: **[ROZSIRENI.md](ROZSIRENI.md)**.
@@ -167,9 +174,10 @@ a v jakém pořadí to dělat: **[ROZSIRENI.md](ROZSIRENI.md)**.
 
 ## Co pilot ještě nemá
 
-- Obtížnost se nepřizpůsobuje — čísla v každé zastávce jsou dané.
-- Není přehled pro rodiče (co dítěti dělá potíže).
-- Není víc profilů pro víc dětí.
+- Obtížnost se nepřizpůsobuje — úlohy se losují, ale nezvedají se podle toho,
+  jak dítěti jde (statistika se už sbírá, adaptivita z ní ještě nečerpá).
+- Není denní procvičování ani sbírání, takže po dohrání chybí důvod se vracet.
+- Světy do 100 a malá násobilka jsou zatím jen v plánu.
 - Hlas je systémový, ne nadabovaný — v Chrome na Androidu a v Safari na iPadu
   český hlas je, na desktop Linuxu často není.
 - Cílená je krajina **na šířku**; na výšku to funguje, ale je to těsnější.

@@ -1,4 +1,4 @@
-/* Rytíř Čísel – AKT I: Cesta do deseti
+/* Rytíř Čísel – SVĚT „do 10“: Cesta do deseti
  * 1. Kovárna       – sčítání a odčítání do 10 na věcech (kovářské zakázky)
  * 2. Most přes rokli – rozklad čísel do 10
  * 3. Číselná stezka  – sčítání a odčítání do 10 na číselné ose
@@ -50,7 +50,7 @@
 
   RC.levels.push({
     id: 'kovarna',
-    akt: 1,
+    svet: 'do10',
     nazev: 'Kovárna',
     ikona: '⚒️',
     popis: 'Spočítej kovářovy zakázky.',
@@ -192,7 +192,7 @@
 
   RC.levels.push({
     id: 'most',
-    akt: 1,
+    svet: 'do10',
     nazev: 'Most přes rokli',
     ikona: '🌉',
     popis: 'Slož most ze dvou prken.',
@@ -317,7 +317,7 @@
 
   RC.levels.push({
     id: 'stezka',
-    akt: 1,
+    svet: 'do10',
     nazev: 'Číselná stezka',
     ikona: '👣',
     popis: 'Odkrokuj kameny na stezce.',
@@ -409,7 +409,7 @@
 
   RC.levels.push({
     id: 'stit',
-    akt: 1,
+    svet: 'do10',
     nazev: 'Kouzelný štít',
     ikona: '🛡️',
     popis: 'Dopočítej nýty do deseti.',
@@ -475,7 +475,7 @@
 
   RC.levels.push({
     id: 'brana',
-    akt: 1,
+    svet: 'do10',
     nazev: 'Strážná brána',
     ikona: '🏰',
     popis: 'Porovnej, kde je víc.',

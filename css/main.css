@@ -404,6 +404,8 @@ html, body {
   box-shadow: var(--stin-m);
   padding: clamp(1rem, 3vh, 1.8rem);
   width: min(92vw, 32rem);
+  /* Nastavení s profily je vysoké – na tabletu na šířku se musí dát doscrollovat. */
+  max-height: 92vh; overflow-y: auto;
   text-align: center;
   animation: panelPrichod .4s cubic-bezier(.2,1.3,.4,1) both;
 }
@@ -420,6 +422,67 @@ html, body {
 .dialog .hvezdicky i { display: inline-block; font-style: normal; animation: hvezdaSkok .5s cubic-bezier(.2,1.7,.4,1) both; }
 
 @keyframes hvezdaSkok { from { opacity: 0; transform: translateY(-24px) scale(.4) rotate(-40deg) } to { opacity: 1; transform: none } }
+
+/* ---------- dialog: profily, přehled ---------- */
+
+.dialog.siroky { width: min(94vw, 42rem); }
+.dialog h4 {
+  margin: 1rem 0 .3rem; font-size: 1.02em; color: #7a4a12;
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.dialog h4:first-of-type { margin-top: .4rem; }
+.dialog .poznamka { font-size: .82em; opacity: .8; font-weight: 600; }
+
+.profil-seznam { display: flex; flex-direction: column; gap: .35rem; }
+.profil-radek {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .25rem; border-radius: var(--r-s);
+}
+.profil-radek.aktivni { background: rgba(242,181,68,.28); box-shadow: inset 0 0 0 2px rgba(122,74,18,.35); }
+.profil-jmeno {
+  flex: 1; font: inherit; font-weight: 800; font-size: 1.02em;
+  text-align: left; color: #3a2b18;
+  background: rgba(0,0,0,.06); border: none; border-radius: var(--r-s);
+  padding: .55rem .8rem; min-height: 2.8rem; cursor: pointer;
+}
+.profil-jmeno small { opacity: .7; margin-left: .4rem; }
+.profil-vstup {
+  flex: 1; font: inherit; font-weight: 700; font-size: 1em;
+  padding: .5rem .7rem; min-height: 2.8rem;
+  border: none; border-radius: var(--r-s);
+  background: #fff; color: #3a2b18;
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,.18);
+}
+
+.prehled { display: flex; flex-direction: column; gap: .25rem; }
+.prehled-radek {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .35rem .5rem; border-radius: var(--r-s);
+  background: rgba(0,0,0,.05);
+  font-weight: 700; font-size: .92em;
+}
+.prehled-radek .jm { flex: 1; text-align: left; }
+.prehled-radek .cis { opacity: .75; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.prehled-radek.trapi { background: rgba(224,87,91,.2); box-shadow: inset 0 0 0 2px rgba(224,87,91,.45); }
+
+/* ---------- pásy: profily na úvodu, světy na mapě ---------- */
+
+.profil-pas, .svet-pas {
+  display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap;
+  margin: .2rem 0 .1rem;
+}
+.tl.profil-chip, .tl.svet-chip {
+  display: flex; flex-direction: column; align-items: center; gap: .1rem;
+  padding: .45em 1.1em; font-size: .95em; line-height: 1.15;
+  background: rgba(0,0,0,.3); color: var(--pergamen);
+  box-shadow: inset 0 0 0 2px rgba(247,236,212,.3);
+}
+.tl.profil-chip small, .tl.svet-chip small { font-size: .72em; opacity: .8; font-weight: 700; }
+.tl.profil-chip.aktivni, .tl.svet-chip.aktivni {
+  background: linear-gradient(#ffd97a, var(--zlata)); color: #3a2b18;
+  box-shadow: 0 4px 0 #b7822b, var(--stin-s);
+}
+.tl.svet-chip.zamceno { opacity: .6; }
 
 /* ---------- efekty ---------- */
 
