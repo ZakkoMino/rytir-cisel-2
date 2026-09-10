@@ -157,7 +157,11 @@ js/main.js          propojení příběhu a úrovní
 ```
 
 Přidat zastávku = jeden `RC.levels.push({...})` s `vytvor(api, kolo)`.
-Mapa i odemykání se dopočítají samy.
+Mapa i odemykání se dopočítají samy — **pozor, jen do deseti zastávek**,
+souřadnice mapy jsou dnes pevné (viz [ROZSIRENI.md](ROZSIRENI.md)).
+
+Plán, kam s hrou dál — světy do 10 / 20 / 100 a malá násobilka, co je v cestě
+a v jakém pořadí to dělat: **[ROZSIRENI.md](ROZSIRENI.md)**.
 
 ---
 
