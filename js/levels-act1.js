@@ -101,10 +101,11 @@
         }
         return s + (sVysledkem ? ' = ' + sVysledkem : '');
       }
+      /* Slovem, ne číslicí: „…je 7.“ by syntéza přečetla jako „sedmý“. */
       function mluvenyPriklad() {
-        var s = String(z.cisla[0]);
+        var s = RC.cislo(z.cisla[0]);
         z.znamenka.forEach(function (zn, k) {
-          s += (zn === '+' ? ' plus ' : ' mínus ') + z.cisla[k + 1];
+          s += (zn === '+' ? ' plus ' : ' mínus ') + RC.cislo(z.cisla[k + 1]);
         });
         return s;
       }
@@ -177,7 +178,7 @@
             pauza: 1000,
             pred: function () {
               priklad.innerHTML = zapis(z.cisla.length, '<b class="miz">' + vysledek + '</b>');
-              api.rekni(mluvenyPriklad() + ' je ' + vysledek + '.');
+              api.rekni(mluvenyPriklad() + ' je ' + RC.cislo(vysledek) + '.');
             }
           });
           api.telo.appendChild(volby);
@@ -218,8 +219,9 @@
       nabidka = RC.shuffle(nabidka);
 
       api.zadani('Mezera je široká <b>' + N + '</b>. Vyber dvě prkna, která ji přesně vyplní.',
-                 'Mezera je široká ' + N + '. Vyber dvě prkna, která ji přesně vyplní.');
-      api.napoveda('Když položíš prkno za ' + a + ', kolik ještě chybí do ' + N + '? Právě tolik musí mít druhé prkno.');
+                 'Mezera je široká ' + RC.cislo(N) + '. Vyber dvě prkna, která ji přesně vyplní.');
+      api.napoveda('Zkus prkno ' + a + '. Kolik pak ještě chybí do celé mezery? ' +
+                   'Právě tolik musí mít to druhé.');
 
       var scena = RC.el('div', 'most-scena');
 
@@ -291,8 +293,8 @@
           prekresli();
 
           if (soucet() === N && polozeno.length === 2) {
-            api.rekni(polozeno[0] + ' a ' + polozeno[1] + ' je ' + N + '. Most drží!',
-                      { prerus: true });
+            api.rekni(RC.cislo(polozeno[0]) + ' a ' + RC.cislo(polozeno[1]) + ' je ' +
+                      RC.cislo(N) + '. Most drží!', { prerus: true });
             rytirNaMoste.style.left = '100%';
             api.hotovo({ pauza: 1100 });
           } else if (polozeno.length === 2) {
@@ -337,12 +339,14 @@
       }
       cil = vpred ? start + kroku : start - kroku;
 
+      var krokySlovo = RC.mn(kroku, 'krok', 'kroky', 'kroků');
       api.zadani('Stojíš na kameni <b>' + start + '</b>. Udělej <b>' + kroku + '</b> ' +
-                 (kroku < 5 ? 'kroky' : 'kroků') + ' ' + (vpred ? 'vpřed' : 'vzad') +
-                 '. Na který kámen dojdeš?');
+                 krokySlovo + ' ' + (vpred ? 'vpřed' : 'vzad') + '. Na který kámen dojdeš?',
+                 'Stojíš na kameni ' + RC.cislo(start) + '. Udělej ' + RC.cislo(kroku) + ' ' +
+                 krokySlovo + ' ' + (vpred ? 'vpřed' : 'vzad') + '. Na který kámen dojdeš?');
       api.napoveda(vpred
-        ? 'Počítej po jednom nahoru: ' + (start + 1) + ', ' + (start + 2) + '…'
-        : 'Počítej po jednom dolů: ' + (start - 1) + ', ' + (start - 2) + '…');
+        ? 'Počítej po jednom nahoru: ' + RC.cislo(start + 1) + ', ' + RC.cislo(start + 2) + '…'
+        : 'Počítej po jednom dolů: ' + RC.cislo(start - 1) + ', ' + RC.cislo(start - 2) + '…');
 
       var bezi = false;                     // během skákání se další klepnutí ignoruje
       var obal = RC.el('div', 'osa-obal');
@@ -372,8 +376,9 @@
         (function dalsi() {
           k++;
           if (k > kroku) {
-            api.rekni('Jsi na ' + cil + '. ' + start + ' ' + (vpred ? 'plus' : 'minus') +
-                      ' ' + kroku + ' je ' + cil + '.', { prerus: true });
+            api.rekni('Jsi na ' + RC.cislo(cil) + '. ' + RC.cislo(start) + ' ' +
+                      (vpred ? 'plus' : 'mínus') + ' ' + RC.cislo(kroku) + ' je ' +
+                      RC.cislo(cil) + '.', { prerus: true });
             api.hotovo({ pauza: 800 });
             return;
           }
@@ -423,9 +428,13 @@
       var sviti = RC._stit[i % RC._stit.length];
       var chybi = 10 - sviti;
 
-      api.zadani('Na štítu svítí <b>' + sviti + '</b> ' + RC.mn(sviti, 'nýt', 'nýty', 'nýtů') +
-                 '. Kolik jich chybí do <b>10</b>?');
-      api.napoveda(sviti + ' a kolik je 10? Zkus si to na prstech: schovej ' + sviti + ' ' +
+      var nytySlovo = RC.mn(sviti, 'nýt', 'nýty', 'nýtů');
+      api.zadani('Na štítu svítí <b>' + sviti + '</b> ' + nytySlovo +
+                 '. Kolik jich chybí do <b>10</b>?',
+                 'Na štítu svítí ' + RC.cislo(sviti, 'm') + ' ' + nytySlovo +
+                 '. Kolik jich chybí do deseti?');
+      api.napoveda(RC.velke(RC.cislo(sviti)) + ' a kolik je deset? Zkus si to na prstech: ' +
+                   'schovej ' + RC.cislo(sviti, 'm') + ' ' +
                    RC.mn(sviti, 'prst', 'prsty', 'prstů') + ', kolik ti zůstalo?');
 
       var scena = RC.el('div', 'stit-scena');
@@ -451,7 +460,7 @@
         pred: function () {
           /* Výsledek se řekne hned, ať se stihne zařadit před pochvalu
              a hra na něj počkala; nýty se mezitím rozsvěcují. */
-          api.rekni(sviti + ' a ' + chybi + ' je deset.');
+          api.rekni(RC.cislo(sviti) + ' a ' + RC.cislo(chybi) + ' je deset.');
           var k = sviti;
           (function dalsi() {
             if (k >= 10) {
@@ -492,8 +501,10 @@
       }
       var spravne = l > p ? '>' : (l < p ? '<' : '=');
 
-      api.zadani('Vlevo <b>' + l + '</b> vojáků, vpravo <b>' + p + '</b>. Vyber znaménko.',
-                 'Vlevo ' + l + ' vojáků, vpravo ' + p + '. Vyber správné znaménko.');
+      var vojaci = RC.mn(l, 'voják', 'vojáci', 'vojáků');
+      api.zadani('Vlevo <b>' + l + '</b> ' + vojaci + ', vpravo <b>' + p + '</b>. Vyber znaménko.',
+                 'Vlevo ' + RC.cislo(l, 'm') + ' ' + vojaci + ', vpravo ' + RC.cislo(p) +
+                 '. Vyber správné znaménko.');
       api.napoveda('Otevřená strana znaménka ukazuje k většímu číslu. ' +
                    (spravne === '=' ? 'Když je jich stejně, patří tam rovná se.' : ''));
 
@@ -523,8 +534,9 @@
         pauza: 1100,
         pred: function () {
           vahy.classList.add(l > p ? 'vlevo' : (l < p ? 'vpravo' : 'rovnost'));
-          api.rekni(spravne === '=' ? l + ' je stejně jako ' + p
-                  : (l > p ? l + ' je více než ' + p : l + ' je méně než ' + p));
+          api.rekni(spravne === '=' ? RC.cislo(l) + ' je stejně jako ' + RC.cislo(p)
+                  : (l > p ? RC.cislo(l) + ' je více než ' + RC.cislo(p)
+                           : RC.cislo(l) + ' je méně než ' + RC.cislo(p)));
         }
       }));
     }

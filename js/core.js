@@ -274,6 +274,42 @@
     jmeno: function () { return this.zena() ? 'Bára' : 'Kvído'; }
   }).load();
 
+  /* Číslo slovem. Syntéza čte „7.“ na konci věty jako řadovou číslovku
+     („sedmý“), takže výsledky se říkají slovem: „tři plus čtyři je sedm“.
+     Do sta stačí – víc hra nepotřebuje a nad to se vrátí číslice. */
+  var CISLA_SLOVEM = ['nula', 'jedna', 'dva', 'tři', 'čtyři', 'pět', 'šest', 'sedm',
+    'osm', 'devět', 'deset', 'jedenáct', 'dvanáct', 'třináct', 'čtrnáct', 'patnáct',
+    'šestnáct', 'sedmnáct', 'osmnáct', 'devatenáct'];
+  var DESITKY_SLOVEM = ['', 'deset', 'dvacet', 'třicet', 'čtyřicet', 'padesát',
+    'šedesát', 'sedmdesát', 'osmdesát', 'devadesát'];
+
+  /* Rod se dá dopsat tam, kde za číslem stojí podstatné jméno:
+       'm'  – mužský   (jeden voják, jeden nýt)
+       'z4' – ženský 4. pád (uber jednu minci, dvě mince)
+     Bez rodu je to podoba, kterou čeština používá při počítání
+     („jedna, dva, tři“, „jedna plus jedna je dva“). */
+  RC.cislo = function (n, rod) {
+    n = Math.round(Number(n));
+    if (!isFinite(n)) return '';
+    if (n < 0) return 'mínus ' + RC.cislo(-n, rod);
+    if (n === 1 && rod === 'm') return 'jeden';
+    if (n === 1 && rod === 'z4') return 'jednu';
+    if (n === 2 && rod === 'z4') return 'dvě';
+    if (n < 20) return CISLA_SLOVEM[n];
+    if (n === 100) return 'sto';
+    if (n < 100) {
+      var j = n % 10;
+      return DESITKY_SLOVEM[Math.floor(n / 10)] + (j ? ' ' + CISLA_SLOVEM[j] : '');
+    }
+    return String(n);
+  };
+
+  /* Věta viditelná v bublině má začínat velkým písmenem, i když začíná číslem. */
+  RC.velke = function (s) {
+    s = String(s);
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+
   /* České množné číslo: 1 nýt, 2–4 nýty, 5+ nýtů. */
   RC.mn = function (n, jeden, dva, pet) {
     if (n === 1) return jeden;
@@ -402,6 +438,13 @@
         .replace(/<[^>]+>/g, ' ')
         .replace(/\s+/g, ' ')
         .replace(/\s+([.,!?…:])/g, '$1')     // po vypuštění značek ať nezůstane mezera před tečkou
+        /* Pojistka: „…je 7.“ by syntéza přečetla jako „sedmý“. Číslo na konci
+           věty proto řekneme slovem a tečku necháme být, ať zůstane pauza.
+           „v 7. patře“ (číslice, tečka, malé písmeno) je řadová číslovka
+           správně a nesaháme na ni. */
+        .replace(/(\d+)\.($|\s+(?=[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]))/g, function (cela, cis, zbytek) {
+          return RC.cislo(cis) + '.' + (zbytek || '');
+        })
         .trim();
       if (opts.prerus) Voice._zahod();
       if (!text || !Voice.zapnuty()) { Voice._odbav(); return; }

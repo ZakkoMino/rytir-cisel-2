@@ -58,36 +58,40 @@
       a = RC.rand(11, 16); b = RC.rand(2, 9 - (a - 10)); vysl = a + b;
       return {
         text: a + ' + ' + b, q: 'Kolik je <b>' + a + ' + ' + b + '</b>?',
-        mluv: 'Kolik je ' + a + ' plus ' + b + '?', vysl: vysl, min: 10, max: 20,
-        vetaVysledku: a + ' plus ' + b + ' je ' + vysl + '!',
-        nap: a + ' je 10 a ' + (a - 10) + '. Desítka se nehýbe, přidávej k jednotkám.'
+        mluv: 'Kolik je ' + RC.cislo(a) + ' plus ' + RC.cislo(b) + '?', vysl: vysl, min: 10, max: 20,
+        vetaVysledku: RC.cislo(a) + ' plus ' + RC.cislo(b) + ' je ' + RC.cislo(vysl) + '!',
+        nap: RC.velke(RC.cislo(a)) + ' je deset a ' + RC.cislo(a - 10) +
+             '. Desítka se nehýbe, přidávej k jednotkám.'
       };
     }
     if (druh === 'plusPres') {                      // 8 + 7
       u = RC.pick(paryScitani()); a = u[0]; b = u[1]; vysl = a + b;
       return {
         text: a + ' + ' + b, q: 'Kolik je <b>' + a + ' + ' + b + '</b>?',
-        mluv: 'Kolik je ' + a + ' plus ' + b + '?', vysl: vysl, min: 10, max: 20,
-        vetaVysledku: a + ' plus ' + b + ' je ' + vysl + '!',
-        nap: 'Do desítky chybí ' + (10 - a) + '. Přidej je, jsi na deseti – a zbývá ' + (vysl - 10) + '.'
+        mluv: 'Kolik je ' + RC.cislo(a) + ' plus ' + RC.cislo(b) + '?', vysl: vysl, min: 10, max: 20,
+        vetaVysledku: RC.cislo(a) + ' plus ' + RC.cislo(b) + ' je ' + RC.cislo(vysl) + '!',
+        nap: 'Do desítky chybí ' + RC.cislo(10 - a) +
+             '. Přidej je, jsi na deseti – a pak ještě ' + RC.cislo(vysl - 10) + '.'
       };
     }
     if (druh === 'minusBez') {                      // 18 − 5
       a = RC.rand(13, 19); b = RC.rand(2, a - 10); vysl = a - b;
       return {
         text: a + ' − ' + b, q: 'Kolik je <b>' + a + ' − ' + b + '</b>?',
-        mluv: 'Kolik je ' + a + ' mínus ' + b + '?', vysl: vysl, min: 9, max: 20,
-        vetaVysledku: a + ' mínus ' + b + ' je ' + vysl + '!',
-        nap: a + ' je 10 a ' + (a - 10) + '. Uber jen z jednotek, desítka zůstává.'
+        mluv: 'Kolik je ' + RC.cislo(a) + ' mínus ' + RC.cislo(b) + '?', vysl: vysl, min: 9, max: 20,
+        vetaVysledku: RC.cislo(a) + ' mínus ' + RC.cislo(b) + ' je ' + RC.cislo(vysl) + '!',
+        nap: RC.velke(RC.cislo(a)) + ' je deset a ' + RC.cislo(a - 10) +
+             '. Uber jen z jednotek, desítka zůstává.'
       };
     }
     if (druh === 'minusPres') {                     // 15 − 8
       u = RC.pick(paryOdcitani()); a = u[0]; b = u[1]; vysl = a - b;
       return {
         text: a + ' − ' + b, q: 'Kolik je <b>' + a + ' − ' + b + '</b>?',
-        mluv: 'Kolik je ' + a + ' mínus ' + b + '?', vysl: vysl, min: 2, max: 15,
-        vetaVysledku: a + ' mínus ' + b + ' je ' + vysl + '!',
-        nap: 'Nejdřív uber ' + (a - 10) + ' – jsi na desítce. Pak uber ještě ' + (b - (a - 10)) + '.'
+        mluv: 'Kolik je ' + RC.cislo(a) + ' mínus ' + RC.cislo(b) + '?', vysl: vysl, min: 2, max: 15,
+        vetaVysledku: RC.cislo(a) + ' mínus ' + RC.cislo(b) + ' je ' + RC.cislo(vysl) + '!',
+        nap: 'Nejdřív uber ' + RC.cislo(a - 10) + ' – jsi na desítce. Pak uber ještě ' +
+             RC.cislo(b - (a - 10)) + '.'
       };
     }
     /* doplneni: 9 + ? = 16 */
@@ -97,10 +101,10 @@
     if (cil <= 10) { vysl += 3; cil = a + vysl; }     // ať se doopravdy přechází přes desítku
     return {
       text: a + ' + ? = ' + cil, q: '<b>' + a + '</b> a kolik je <b>' + cil + '</b>?',
-      mluv: a + ' a kolik je ' + cil + '?', vysl: vysl, min: 2, max: 14,
-      vetaVysledku: a + ' a ' + vysl + ' je ' + cil + '!',
-      nap: 'Z ' + a + ' do desítky chybí ' + (10 - a) + '. A z desítky do ' + cil +
-           ' ještě ' + (cil - 10) + '.'
+      mluv: RC.cislo(a) + ' a kolik je ' + RC.cislo(cil) + '?', vysl: vysl, min: 2, max: 14,
+      vetaVysledku: RC.cislo(a) + ' a ' + RC.cislo(vysl) + ' je ' + RC.cislo(cil) + '!',
+      nap: 'Do desítky chybí ' + RC.cislo(10 - a) + '. A z desítky nahoru ještě ' +
+           RC.cislo(cil - 10) + '.'
     };
   }
 
@@ -142,17 +146,21 @@
         h1.classList.add('jenCist'); h2.classList.add('jenCist');
         r1.classList.add('plny');
         api.zadani('Kolik je vajec dohromady?');
-        api.napoveda('První hnízdo je plné, to je <b>10</b>. Ve druhém jsou ještě ' + druhe +
-                     '. Deset a ' + druhe + ' je…');
+        api.napoveda('První hnízdo je plné, to je <b>10</b>. Ve druhém ' +
+                     RC.mn(druhe, 'je', 'jsou', 'je') + ' ještě ' + RC.cislo(druhe) +
+                     '. Deset a ' + RC.cislo(druhe) + ' je…');
         api.telo.appendChild(api.volby(n, api.okoliVoleb(n, 4, 10, 20), {
           pauza: 800,
-          pred: function () { api.rekni('Deset a ' + druhe + ' je ' + n + '.'); }
+          pred: function () {
+            api.rekni('Deset a ' + RC.cislo(druhe) + ' je ' + RC.cislo(n) + '.');
+          }
         }));
 
       } else {
         api.zadani('Nasbírej do hnízd <b>' + n + '</b> vajec. Nejdřív naplň první hnízdo.',
-                   'Nasbírej do hnízd ' + n + ' vajec. Nejdřív naplň první hnízdo.');
-        api.napoveda(n + ' je deset a ještě ' + druhe + '. Naplň celé první hnízdo a do druhého dej ' + druhe + '.');
+                   'Nasbírej do hnízd ' + RC.cislo(n) + ' vajec. Nejdřív naplň první hnízdo.');
+        api.napoveda(RC.cislo(n) + ' je deset a ještě ' + RC.cislo(druhe) +
+                     '. Naplň celé první hnízdo a do druhého dej ' + RC.cislo(druhe) + '.');
 
         var pocet = 0;
         var citac = RC.el('div', 'pocitadlo', '0');
@@ -168,7 +176,8 @@
           r2.classList.toggle('plny', pocet >= 20);
           citac.textContent = String(pocet);
           if (pocet === n) {
-            api.rekni(n + ' vajec. To je deset a ' + druhe + '.', { prerus: true });
+            api.rekni(RC.cislo(n) + ' vajec. To je deset a ' + RC.cislo(druhe) + '.',
+                      { prerus: true });
             api.hotovo({ pauza: 800 });
           }
         }
@@ -216,12 +225,12 @@
       api.zadani('Na polici je <b>' + start + '</b> kaštanů. ' +
                  (znak === '+' ? 'Přidej <b>' + kolik + '</b>.' : 'Uber <b>' + kolik + '</b>.') +
                  ' Kolik jich bude?',
-                 'Na polici je ' + start + ' kaštanů. ' +
-                 (znak === '+' ? 'Přidej ' + kolik + '.' : 'Uber ' + kolik + '.') +
-                 ' Naskládej to na police.');
-      api.napoveda('Otep deseti se nehýbe. Počítej jen volné kaštany: bylo jich ' + volnychStart +
-                   (znak === '+' ? ' a přidáváš ' : ' a ubíráš ') + kolik +
-                   '. Deset a k tomu tolik, kolik ti vyjde.');
+                 'Na polici je ' + RC.cislo(start) + ' kaštanů. ' +
+                 (znak === '+' ? 'Přidej ' : 'Uber ') + RC.cislo(kolik) +
+                 '. Naskládej to na police.');
+      api.napoveda('Otep deseti se nehýbe, počítej jen volné kaštany. Volných je ' +
+                   RC.cislo(volnychStart) + (znak === '+' ? ' a přidáváš ' : ' a ubíráš ') +
+                   RC.cislo(kolik) + '. Deset a k tomu tolik, kolik ti vyjde.');
 
       var scena = RC.el('div', 'police-scena');
 
@@ -264,8 +273,8 @@
         }
 
         if (pocet === volnychCil) {
-          api.rekni(start + (znak === '+' ? ' plus ' : ' mínus ') + kolik + ' je ' + cil +
-                    '. Otep se ani nehnula.', { prerus: true });
+          api.rekni(RC.cislo(start) + (znak === '+' ? ' plus ' : ' mínus ') + RC.cislo(kolik) +
+                    ' je ' + RC.cislo(cil) + '. Otep se ani nehnula.', { prerus: true });
           api.hotovo({ pauza: 900 });
         }
       }
@@ -315,13 +324,15 @@
       }
       cil = nahoru ? start + o : start - o;
 
+      var patraSlovo = RC.mn(o, 'patro', 'patra', 'pater');
       api.zadani('Jsi v <b>' + start + '.</b> patře. Vyjeď o <b>' + o + '</b> ' +
-                 (nahoru ? 'pater výš' : 'pater níž') + '. Které patro to je?',
-                 'Jsi v ' + start + '. patře. Vyjeď o ' + o + ' pater ' + (nahoru ? 'výš' : 'níž') +
-                 '. Které patro to je?');
+                 patraSlovo + ' ' + (nahoru ? 'výš' : 'níž') + '. Které patro to je?',
+                 'Jsi v ' + start + '. patře. Vyjeď o ' + RC.cislo(o) + ' ' + patraSlovo + ' ' +
+                 (nahoru ? 'výš' : 'níž') + '. Které patro to je?');
+      /* Bez předložky – „z sedm“ by byl špatný pád a slovem se to nespraví. */
       api.napoveda(nahoru
-        ? 'Z ' + start + ' přidávej po jednom: ' + (start + 1) + ', ' + (start + 2) + '…'
-        : 'Z ' + start + ' ubírej po jednom: ' + (start - 1) + ', ' + (start - 2) + '…');
+        ? 'Přidávej po jednom: ' + RC.cislo(start + 1) + ', ' + RC.cislo(start + 2) + '…'
+        : 'Ubírej po jednom: ' + RC.cislo(start - 1) + ', ' + RC.cislo(start - 2) + '…');
 
       var jede = false;
       var scena = RC.el('div', 'vytah-scena');
@@ -362,8 +373,8 @@
         (function dalsi() {
           k++;
           if (k > o) {
-            api.rekni(start + ' ' + (nahoru ? 'plus' : 'minus') + ' ' + o + ' je ' + cil + '.',
-                      { prerus: true });
+            api.rekni(RC.cislo(start) + ' ' + (nahoru ? 'plus' : 'mínus') + ' ' + RC.cislo(o) +
+                      ' je ' + RC.cislo(cil) + '.', { prerus: true });
             api.hotovo({ pauza: 800 });
             return;
           }
@@ -393,9 +404,10 @@
       var soucet = a + b;
 
       api.zadani('<b>' + a + ' + ' + b + ' = ?</b> Přilévej kapky a dívej se.',
-                 a + ' plus ' + b + '. Přilévej kapky a dívej se, co se stane.');
-      api.napoveda('Do desítky chybí ' + (10 - a) + '. Přilij ' + (10 - a) + ' – máš 10. ' +
-                   'A zbylo ti ještě ' + (b - (10 - a)) + '. Tak je to ' + soucet + '.');
+                 RC.velke(RC.cislo(a)) + ' plus ' + RC.cislo(b) +
+                 '. Přilévej kapky a dívej se, co se stane.');
+      api.napoveda('Do desítky chybí ' + RC.cislo(10 - a) + '. Přilij je a máš deset. ' +
+                   'A pak ještě ' + RC.cislo(b - (10 - a)) + '.');
 
       var priklad = RC.el('div', 'priklad', '<b>' + a + '</b> + <b>' + b + '</b> = ?');
       api.telo.appendChild(priklad);
@@ -453,7 +465,7 @@
         pauza: 900,
         pred: function () {
           lahve[1].obal.classList.add('plna');
-          api.rekni('Deset a ' + (soucet - 10) + ' je ' + soucet + '.');
+          api.rekni('Deset a ' + RC.cislo(soucet - 10) + ' je ' + RC.cislo(soucet) + '.');
         }
       });
     }
@@ -477,9 +489,10 @@
 
       api.zadani('V truhle je <b>' + celkem + '</b> mincí. Drak chce <b>' + uber +
                  '</b>. Vyndej mu je klepnutím.',
-                 'V truhle je ' + celkem + ' mincí. Drak chce ' + uber + '. Vyndej mu je klepnutím.');
-      api.napoveda('Nejdřív uber ' + (celkem - 10) + ' volných mincí – zůstane 10. ' +
-                   'Pak uber ještě ' + (uber - (celkem - 10)) + ' z desítky. Zbyde ' + zbytek + '.');
+                 'V truhle je ' + RC.cislo(celkem) + ' mincí. Drak chce ' + RC.cislo(uber) +
+                 '. Vyndej mu je klepnutím.');
+      api.napoveda('Nejdřív uber ty volné mince – zůstane deset. ' +
+                   'Pak uber z desítky ještě ' + RC.cislo(uber - (celkem - 10), 'z4') + '.');
 
       var scena = RC.el('div', 'poklad');
       var t1 = RC.el('div', 'truhla');
@@ -516,7 +529,10 @@
           api.zadani('Kolik mincí zbylo?', 'A kolik mincí zbylo v truhlách?');
           api.telo.appendChild(api.volby(zbytek, api.okoliVoleb(zbytek, 4, 0, 15), {
             pauza: 900,
-            pred: function () { api.rekni(celkem + ' bez ' + uber + ' je ' + zbytek + '.'); }
+            pred: function () {
+              api.rekni(RC.cislo(celkem) + ' bez ' + RC.cislo(uber) + ' je ' +
+                        RC.cislo(zbytek) + '.');
+            }
           }));
         }
       }
@@ -590,15 +606,19 @@
       /* ---- krok 1: rozdělit druhé číslo ---- */
       api.zadani(scitani
         ? 'Nejdřív dojdi na desítku. Kolik z <b>' + b + '</b> tam dáš?'
-        : 'Nejdřív se vrať na desítku. Kolik z <b>' + b + '</b> ubereš?');
+        : 'Nejdřív se vrať na desítku. Kolik z <b>' + b + '</b> ubereš?',
+        scitani
+        ? 'Nejdřív dojdi na desítku. Kolik do ní dáš?'
+        : 'Nejdřív se vrať na desítku. Kolik ubereš?');
       api.napoveda(scitani
-        ? 'V desítce je ' + a + ' a chybí do deseti. Kolik políček je ještě prázdných?'
-        : 'Volných jednotek je ' + prvni + '. Uber přesně ty, ať jsi na desítce.');
+        ? 'V desítce je ' + RC.cislo(a) + '. Kolik políček je ještě prázdných?'
+        : 'Volných jednotek je ' + RC.cislo(prvni) + '. Uber přesně ty, ať jsi na desítce.');
 
       var krok1 = api.volbyKrok(prvni, api.okoliVoleb(prvni, 3, 1, 9), function () {
         api.rekni(scitani
-          ? 'Do desítky chybí ' + prvni + '. Zbývá ' + druhy + '.'
-          : 'Ubereš ' + prvni + ' a jsi na desítce. Zbývá ubrat ' + druhy + '.');
+          ? 'Do desítky chybí ' + RC.cislo(prvni) + '. A pak ještě ' + RC.cislo(druhy) + '.'
+          : 'Ubereš ' + RC.cislo(prvni) + ' a jsi na desítce. Zbývá ubrat ' +
+            RC.cislo(druhy) + '.');
         rozdelPas();
         setTimeout(function () { krok1.remove(); krok2(); }, 420);
       }, { cls: 'male' });
@@ -622,10 +642,13 @@
       function krok2() {
         api.zadani(scitani
           ? 'Deset a ještě <b>' + druhy + '</b>. Kolik to je?'
-          : 'Na desítce jsi. Zbývá ubrat <b>' + druhy + '</b>. Kolik zůstane?');
+          : 'Na desítce jsi. Zbývá ubrat <b>' + druhy + '</b>. Kolik zůstane?',
+          scitani
+          ? 'Deset a ještě ' + RC.cislo(druhy) + '. Kolik to je?'
+          : 'Na desítce jsi. Zbývá ubrat ' + RC.cislo(druhy) + '. Kolik zůstane?');
         api.napoveda(scitani
-          ? 'Deset a ' + druhy + ' – to se čte jako jedna desítka a ' + druhy + '.'
-          : 'Z deseti uber ' + druhy + '. Deset bez ' + druhy + '.');
+          ? 'Deset a ' + RC.cislo(druhy) + ' – to je jedna desítka a ' + RC.cislo(druhy) + '.'
+          : 'Z deseti uber ' + RC.cislo(druhy) + '.');
 
         var min = scitani ? 10 : 2, max = scitani ? 20 : 10;
         api.telo.appendChild(api.volby(vysl, api.okoliVoleb(vysl, 4, min, max), {
@@ -639,8 +662,8 @@
             }
             priklad.innerHTML = '<b>' + a + '</b> ' + (scitani ? '+' : '−') + ' <b>' + b +
               '</b> = <b class="miz">' + vysl + '</b>';
-            api.rekni(a + (scitani ? ' plus ' : ' mínus ') + b + ' je ' + vysl +
-                      '. Přes desítku na dva kroky.');
+            api.rekni(RC.cislo(a) + (scitani ? ' plus ' : ' mínus ') + RC.cislo(b) + ' je ' +
+                      RC.cislo(vysl) + '. Přes desítku na dva kroky.');
           }
         }));
       }
@@ -681,9 +704,7 @@
           rytirSvg.classList.add('utoci');
           /* Výsledek se řekne hned – pochvala se zařadí až za něj a hra počká,
              než se dopoví. Rozbití štítu je jen doprovodná animace. */
-          api.rekni(i === 4 ? 'Devět a sedm je šestnáct! Štít je rozbitý.'
-                            : u.text.replace('−', 'mínus').replace('+', 'plus') +
-                              ' je ' + u.vysl + '! Štít je rozbitý.');
+          api.rekni(u.vetaVysledku + ' Štít je rozbitý.');
           setTimeout(function () {
             drakSvg.classList.add('zasah');
             var zbyle = stity.querySelectorAll('i:not(.pryc)');
