@@ -152,7 +152,8 @@
     RC.scena(scena);
     setTimeout(function () {
       RC.Voice.rekni(mameRozehrano
-        ? 'Vítej zpátky, rytíři. Pokračujeme ve výpravě?'
+        ? (RC.State.zena() ? 'Vítej zpátky, rytířko. Pokračujeme ve výpravě?'
+                           : 'Vítej zpátky, rytíři. Pokračujeme ve výpravě?')
         : 'Rytíř Čísel. Souboj s drakem. Klepni na Začít výpravu.');
     }, 500);
   }
@@ -296,7 +297,7 @@
       if (opts.rekni) setTimeout(function () { RC.Voice.rekni(opts.rekni); }, 450);
       else if (RC.State.data.hvezdy === RC.levels.length) {
         setTimeout(function () {
-          RC.Voice.rekni('Máš všech deset hvězd! Celou výpravu jsi zvládl.');
+          RC.Voice.rekni(RC.t('Máš všech ' + RC.levels.length + ' hvězd! Celou výpravu jsi zvládl{a}.'));
         }, 450);
       }
     }

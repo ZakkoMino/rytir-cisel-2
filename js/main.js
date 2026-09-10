@@ -71,7 +71,8 @@
     scena.appendChild(obsah);
     RC.scena(scena);
     setTimeout(function () {
-      RC.Voice.rekni('Výprava dokončena! Máš všech deset hvězd odvahy. Jsi opravdový rytíř čísel.');
+      RC.Voice.rekni('Výprava dokončena! Máš všech ' + RC.levels.length + ' hvězd odvahy. ' +
+        (RC.State.zena() ? 'Jsi opravdová rytířka čísel.' : 'Jsi opravdový rytíř čísel.'));
     }, 600);
   }
 

@@ -59,7 +59,10 @@
     odmena: 'Kovář ti dal meč a štít. Umíš přidávat i ubírat!',
     kola: 6,
     vytvor: function (api, i) {
-      var z = ZAKAZKY[i % ZAKAZKY.length];
+      /* Pořadí zakázek se pro každé hraní zamíchá, ať druhý průchod není
+         znak po znaku stejný. Volí se při prvním kole a drží celou zastávku. */
+      if (i === 0 || !RC._zakazky) RC._zakazky = RC.shuffle(ZAKAZKY);
+      var z = RC._zakazky[i % RC._zakazky.length];
 
       /* Výsledek se dopočítá z příkladu, ať se dá zakázka přidat jedním řádkem. */
       var vysledek = z.cisla[0];
@@ -202,9 +205,12 @@
       var a = RC.rand(1, N - 1);
       var b = N - a;
 
-      /* Prkna: správná dvojice + dvě, které se nehodí (nikdy delší než mezera). */
+      /* Prkna: správná dvojice + dvě, které se nehodí. Nikdy ne prkno dlouhé
+         přesně jako mezera – tím by se dala mezera zaplnit jedním prknem,
+         most by se ale nedostavěl (potřebuje dvě) a dítě by nedostalo
+         žádnou zpětnou vazbu. */
       var nabidka = [a, b];
-      var zkousky = RC.shuffle(RC.range(1, N));
+      var zkousky = RC.shuffle(RC.range(1, N - 1));
       for (var z = 0; z < zkousky.length && nabidka.length < 4; z++) {
         var v = zkousky[z];
         if (nabidka.indexOf(v) < 0) nabidka.push(v);
@@ -411,12 +417,16 @@
     odmena: 'Štít září. Dvojice do deseti už umíš zpaměti!',
     kola: 6,
     vytvor: function (api, i) {
-      var poradi = [7, 4, 8, 3, 6, 9];
-      var sviti = poradi[i];
+      /* Sedmičkou se začíná (je nejnázornější), zbytek se losuje – dřív bylo
+         pořadí pevné a dvojice 5 + 5 ani krajní případy nepřišly vůbec. */
+      if (i === 0 || !RC._stit) RC._stit = [7].concat(RC.shuffle([1, 2, 3, 4, 5, 6, 8, 9]));
+      var sviti = RC._stit[i % RC._stit.length];
       var chybi = 10 - sviti;
 
-      api.zadani('Na štítu svítí <b>' + sviti + '</b> nýtů. Kolik jich chybí do <b>10</b>?');
-      api.napoveda(sviti + ' a kolik je 10? Zkus si to na prstech: schovej ' + sviti + ' prstů, kolik ti zůstalo?');
+      api.zadani('Na štítu svítí <b>' + sviti + '</b> ' + RC.mn(sviti, 'nýt', 'nýty', 'nýtů') +
+                 '. Kolik jich chybí do <b>10</b>?');
+      api.napoveda(sviti + ' a kolik je 10? Zkus si to na prstech: schovej ' + sviti + ' ' +
+                   RC.mn(sviti, 'prst', 'prsty', 'prstů') + ', kolik ti zůstalo?');
 
       var scena = RC.el('div', 'stit-scena');
       var obal = RC.el('div', 'stit-obal');

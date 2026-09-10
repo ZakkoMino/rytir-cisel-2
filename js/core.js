@@ -95,6 +95,12 @@
     jmeno: function () { return this.zena() ? 'Bára' : 'Kvído'; }
   }).load();
 
+  /* České množné číslo: 1 nýt, 2–4 nýty, 5+ nýtů. */
+  RC.mn = function (n, jeden, dva, pet) {
+    if (n === 1) return jeden;
+    return (n >= 2 && n <= 4) ? dva : pet;
+  };
+
   /* Rodová koncovka: "Zvládl{a} jsi" -> "Zvládla jsi" / "Zvládl jsi",
      "rytíř{ka}" -> "rytířka" / "rytíř". */
   RC.t = function (s) {
@@ -211,7 +217,13 @@
        rekni(text, {prerus:true}) – utne, co běží, a řekne tohle */
     rekni: function (text, opts) {
       opts = opts || {};
-      text = text == null ? '' : String(text).replace(/\s+/g, ' ').trim();
+      /* Zadání i nápovědy jsou HTML – hlas musí dostat čistý text, jinak
+         syntéza předčítá i značky. */
+      text = text == null ? '' : String(text)
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .replace(/\s+([.,!?…:])/g, '$1')     // po vypuštění značek ať nezůstane mezera před tečkou
+        .trim();
       if (opts.prerus) Voice._zahod();
       if (!text || !Voice.zapnuty()) { Voice._odbav(); return; }
       Voice._fronta.push({ text: text, rate: opts.rate || 0.95, pitch: opts.pitch || 1.05 });
