@@ -19,6 +19,8 @@
   ],
   "screenshots": [
     { "src": "ikony/nahled-kovarna.png", "sizes": "1024x720", "type": "image/png", "form_factor": "wide",
-      "label": "Kovárna – kovářská zakázka a příklad k ní" }
+      "label": "Kovárna – kovářská zakázka a příklad k ní" },
+    { "src": "ikony/nahled-mapa.png", "sizes": "768x1024", "type": "image/png", "form_factor": "narrow",
+      "label": "Mapa výpravy na Dračí horu" }
   ]
 }

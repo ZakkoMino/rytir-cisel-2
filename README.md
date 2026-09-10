@@ -26,6 +26,14 @@ Bez `manifest.json` dělal Android jen zástupce, který se otevřel v prohlíž
 s adresním řádkem. O celou obrazovku se stará `manifest.json`
 (`display: fullscreen`, ikony) a o offline běh `sw.js`.
 
+**Při nasazení, které přidá nebo přejmenuje soubor hry, zvedni `VERZE`
+v `sw.js`.** Service worker podle ní pojmenovává svou cache: nová verze se
+předcachuje celá (včetně nového souboru) a stará se smaže. Bez zvednutí verze
+by první offline spuštění po takovém nasazení nový soubor nemělo.
+Změny v už existujících souborech se stáhnou na pozadí samy — dítě je uvidí
+**při dalším spuštění**, protože hra odpovídá nejdřív z cache a nikdy nečeká
+na síť.
+
 Nasazuje se samo z `main`. Nic se nebuilduje, soubory jdou nahoru jak leží
 (`.nojekyll` je v repu proto, aby do nich nesahal Jekyll).
 
