@@ -5,9 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
 <meta name="theme-color" content="#1b1338">
 <meta name="description" content="Rytíř Čísel – příběhová hra na počítání do 10 a do 20 pro děti po první třídě.">
+<!-- Manifest = Android hru nainstaluje jako aplikaci, ne jako zástupce do prohlížeče. -->
+<link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rytíř Čísel">
+<meta name="application-name" content="Rytíř Čísel">
+<link rel="icon" href="ikony/ikona-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="ikony/ikona-180.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%A1%EF%B8%8F%3C/text%3E%3C/svg%3E">
 <title>Rytíř Čísel – Souboj s drakem</title>
 <link rel="stylesheet" href="css/main.css">
@@ -23,5 +29,15 @@
   <script src="js/levels-act2.js"></script>
   <script src="js/story.js"></script>
   <script src="js/main.js"></script>
+
+  <script>
+  /* Service worker: kvůli němu jde hra nainstalovat na plochu a funguje bez sítě.
+     Z file:// se registrovat nedá, tam se prostě přeskočí a hra běží jako dřív. */
+  if ('serviceWorker' in navigator && location.protocol.slice(0, 4) === 'http') {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    });
+  }
+  </script>
 </body>
 </html>

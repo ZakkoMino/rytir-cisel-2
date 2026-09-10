@@ -13,8 +13,18 @@ Dítě zkouší, jak dlouho potřebuje, a po druhé chybě mu nápověda naskoč
 
 > ### 🛡️ **https://zakkomino.github.io/rytir-cisel-2/**
 
-Na iPadu doporučuju v Safari *Přidat na plochu* — hra se pak spustí
-na celou obrazovku bez adresního řádku.
+### Nainstalovat na tablet
+
+Hra je **PWA**, takže se dá nainstalovat jako aplikace — spustí se na celou
+obrazovku bez adresního řádku a funguje i bez internetu.
+
+- **Android (Chrome):** menu ⋮ → *Nainstalovat aplikaci* (nebo *Přidat na
+  plochu* → nabídne *Instalovat*).
+- **iPad (Safari):** tlačítko Sdílet → *Přidat na plochu*.
+
+Bez `manifest.json` dělal Android jen zástupce, který se otevřel v prohlížeči
+s adresním řádkem. O celou obrazovku se stará `manifest.json`
+(`display: fullscreen`, ikony) a o offline běh `sw.js`.
 
 Nasazuje se samo z `main`. Nic se nebuilduje, soubory jdou nahoru jak leží
 (`.nojekyll` je v repu proto, aby do nich nesahal Jekyll).
@@ -43,7 +53,9 @@ python3 -m http.server 8000        # nebo: npx http-server -p 8000
 
 Na tabletu pak `http://<ip-počítače>:8000`.
 
-Funguje offline, postup se ukládá do `localStorage` prohlížeče.
+Postup se ukládá do `localStorage` prohlížeče. Offline běh drží service
+worker — ten se registruje jen přes `http(s)://`, takže z `file://` hra
+funguje taky, jen bez cache.
 
 ---
 
@@ -123,6 +135,9 @@ a ubývat (příběh → příklad), na **číselné stezce** už jen v hlavě p
 
 ```
 index.html
+manifest.json       PWA: jméno, ikony, celá obrazovka (instalace na plochu)
+sw.js               service worker: instalovatelnost a offline běh
+ikony/              ikony aplikace (192/512 + maskable) a náhled pro instalaci
 css/main.css        kulisy, tlačítka, mapa, komiks, efekty
 css/levels.css      skořápka úrovně a jednotlivé minihry
 js/core.js          stav, zvuk, český hlas, SVG postavy, efekty
